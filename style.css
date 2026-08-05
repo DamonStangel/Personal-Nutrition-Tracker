@@ -168,6 +168,10 @@ h1 { font-size: 28px; } h2 { font-size: 24px; }
 .meal-heading { display:flex; justify-content:space-between; align-items:center; margin:-4px -4px 9px; padding:5px 7px; border-radius:6px; background:#edf2eb; }
 .meal-heading strong { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: #657168; }
 .meal-heading button { border: 0; background: none; color: #89968d; font-size: 18px; line-height: 1; padding: 0 2px; }
+.meal-heading-actions { display:flex; align-items:center; gap:5px; }
+.meal-heading .save-meal { width:24px; height:24px; border-radius:5px; color:#617b5d; font-size:13px; }
+.meal-heading .save-meal:hover { color:white; background:#5b7d56; }
+body.dark .meal-heading .save-meal { color:#b9d2b5; }
 .food { margin:0 -7px 4px; padding:7px; border-radius:6px; position:relative; padding-right:48px; }
 .food:nth-of-type(even) { background:#f1f5ef; }
 .food:nth-of-type(odd) { background:#f8f3ec; }
@@ -193,8 +197,8 @@ dialog::backdrop { background: #111a14a8; backdrop-filter: blur(3px); }
 .app-modal-actions { display:flex; justify-content:center; gap:8px; }
 .app-modal-actions button { min-width:105px; }
 .app-modal .primary-button.danger { background:#a95446; }
-.day-detail-dialog { width:min(1180px,calc(100% - 30px)); max-height:calc(100vh - 50px); padding:0; background:var(--paper); color:var(--ink); }
-.day-detail-shell { padding:26px; }
+.day-detail-dialog { width:min(1420px,calc(100% - 20px)); max-height:calc(100vh - 24px); padding:0; background:var(--paper); color:var(--ink); }
+.day-detail-shell { padding:32px; }
 .day-detail-date { margin:3px 0 0; color:var(--muted); font-size:11px; }
 .day-detail-summary { display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:12px; align-items:center; margin:17px 0; padding:15px 17px; border:1px solid var(--line); border-radius:10px; background:#f2f5f1; }
 .day-detail-summary small { display:block; color:var(--muted); font-size:9px; font-weight:700; letter-spacing:1px; }
@@ -204,8 +208,8 @@ dialog::backdrop { background: #111a14a8; backdrop-filter: blur(3px); }
 .day-goal-meter > div { height:5px; margin-top:6px; overflow:hidden; border-radius:4px; background:#dfe6de; }
 .day-goal-meter i { display:block; height:100%; border-radius:4px; background:#789b71; }
 .day-goal-meter.protein i { background:#d3755f; }
-.day-detail-meals { display:grid; grid-template-columns:repeat(5,minmax(180px,1fr)); gap:9px; overflow-x:auto; padding-bottom:3px; }
-.day-detail-meal { min-width:180px; border:1px solid var(--line); border-top:4px solid #a7b89f; border-radius:9px; overflow:hidden; display:flex; flex-direction:column; }
+.day-detail-meals { display:grid; grid-template-columns:repeat(5,minmax(225px,1fr)); gap:12px; overflow-x:auto; padding-bottom:5px; }
+.day-detail-meal { min-width:225px; border:1px solid var(--line); border-top:5px solid #a7b89f; border-radius:10px; overflow:hidden; display:flex; flex-direction:column; }
 .day-detail-meal[data-meal="breakfast"] { border-top-color:#d5a84d; }
 .day-detail-meal[data-meal="lunch"] { border-top-color:#72a178; }
 .day-detail-meal[data-meal="dinner"] { border-top-color:#7789bd; }
@@ -214,6 +218,9 @@ dialog::backdrop { background: #111a14a8; backdrop-filter: blur(3px); }
 .day-detail-meal-head { display:flex; justify-content:space-between; padding:10px 11px; background:#edf2eb; }
 .day-detail-meal-head strong { font-size:10px; text-transform:uppercase; letter-spacing:.7px; }
 .day-detail-meal-head span { color:var(--muted); font-size:9px; }
+.day-detail-meal-head > div { display:flex; align-items:center; gap:7px; }
+.day-detail-meal-head button { width:25px; height:25px; padding:0; border:0; border-radius:6px; color:#526c4e; background:#dfeadb; font-size:15px; font-weight:800; }
+.day-detail-meal-head button:hover { color:white; background:#5b7d56; }
 .day-detail-foods { flex:1; padding:9px; }
 .day-detail-foods > p { color:var(--muted); font-size:10px; font-style:italic; }
 .day-detail-food { padding:8px; border-radius:6px; }
@@ -221,6 +228,10 @@ dialog::backdrop { background: #111a14a8; backdrop-filter: blur(3px); }
 .day-detail-food strong { display:block; font-size:10px; }
 .day-detail-food em { color:#567151; font-style:normal; }
 .day-detail-food span { display:block; margin-top:2px; color:var(--muted); font-size:9px; }
+.day-detail-food-actions { display:flex; justify-content:flex-end; gap:5px; margin-top:7px; opacity:.72; }
+.day-detail-food-actions button { padding:3px 6px; border:1px solid var(--line); border-radius:5px; color:var(--muted); background:var(--paper); font-size:9px; }
+.day-detail-food-actions button:first-child:hover { color:#486245; border-color:#8ba387; }
+.day-detail-food-actions button:last-child:hover { color:#a54e40; border-color:#bd776c; }
 .day-detail-meal-total { padding:10px; border-top:1px solid var(--line); background:#f6f8f5; }
 .day-detail-meal-total span { display:block; color:var(--muted); font-size:8px; text-transform:uppercase; letter-spacing:.7px; }
 .day-detail-meal-total strong { display:block; margin-top:2px; font-size:9px; }
@@ -267,6 +278,10 @@ input, select { width: 100%; padding: 11px 12px; border: 1px solid #dce2dd; bord
 input:focus, select:focus { border-color: var(--green); box-shadow: 0 0 0 3px #5b7d5618; }
 .nutrition-fields { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+.dialog-action-spacer { flex:1; }
+.library-save-button { padding:9px 13px; border:1px solid #afc3aa; border-radius:8px; color:#486245; background:#edf3ea; font-weight:700; }
+.library-save-button:hover { color:white; background:#547550; border-color:#547550; }
+body.dark .library-save-button { color:#c8dec4; background:#2d4031; border-color:#58705c; }
 body.dark .sidebar { background:#0b100d; }
 body.dark .topbar { background:#19231c; }
 body.dark .goal-strip,body.dark .day-card,body.dark .recipe-card,body.dark dialog,body.dark .goals-card,body.dark .insight-stat,body.dark .insight-panel { background:var(--paper); color:var(--ink); box-shadow:0 6px 20px #00000028; }
@@ -285,6 +300,8 @@ body.dark .day-title-button:hover,body.dark .day-detail-meal-head { background:#
 body.dark .day-detail-summary,body.dark .day-detail-meal-total { background:#19231c; }
 body.dark .day-detail-food:nth-child(odd) { background:#303f34; }
 body.dark .day-goal-meter > div { background:#111a14; }
+body.dark .day-detail-meal-head button { color:#d1e5cd; background:#4a614e; }
+body.dark .day-detail-food-actions button { background:#19231c; }
 body.dark .meal-total,body.dark .day-header,body.dark .meal { border-color:var(--line); }
 body.dark label { color:#b9c4bc; }
 body.dark .goal-ring::after { background:var(--paper); }
@@ -343,11 +360,12 @@ input,select { font-size:14px; }
 .day-detail-summary small { font-size:10px; }
 .day-detail-summary > div:first-child strong { font-size:16px; }
 .day-goal-meter span { font-size:12px; }
-.day-detail-meal { min-width:205px; }
+.day-detail-meal { min-width:225px; }
 .day-detail-meal-head strong { font-size:12px; }
 .day-detail-meal-head span { font-size:11px; }
 .day-detail-food strong { font-size:12px; }
 .day-detail-food span,.day-detail-meal-total strong { font-size:11px; }
+.day-detail-food-actions button { font-size:11px; }
 .day-detail-meal-total span { font-size:10px; }
 .app-modal-content p { font-size:14px; }
 

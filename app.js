@@ -6,6 +6,7 @@ let activeRecipeFilter = "all";
 let currentPage = "weekly";
 let editingFood = null;
 let editingRecipeId = null;
+let activeDayDetail = null;
 
 const RECIPES = [
   ["Breakfast Bagel","breakfast",305,36,34,28,6,["2 oz ham","Tomato slices","Cheese spread","3/4 cup egg whites","Thin bagel"]],
@@ -119,7 +120,7 @@ function render() {
     card.innerHTML = `<header class="day-header"><div class="day-title"><button class="day-title-button" data-open-day="${day}" aria-label="Open ${day} breakdown">${day}<span>↗</span></button><div class="day-header-actions"><span>${formatDate(date,{month:"short",day:"numeric"})}</span><button class="clear-day" data-clear-day="${day}" aria-label="Clear ${day}" title="Clear ${day}">⌫</button></div></div><div class="day-total">${tidy(total.cal).toLocaleString()} cal<small>${tidy(total.p)}p · ${tidy(total.c)}c · ${tidy(total.fat)}f · ${tidy(total.s)}s</small></div><div class="progress"><span style="width:${Math.min(total.cal/GOALS.calories*100,100)}%"></span></div></header>`;
     MEALS.forEach(meal => {
       const foods = meals[meal] || [], mt = sumFoods(foods), section = document.createElement("section"); section.className = "meal"; section.dataset.meal=meal.toLowerCase();
-      section.innerHTML = `<div class="meal-heading"><strong>${meal}</strong><button data-day="${day}" data-meal="${meal}" aria-label="Add to ${meal}">+</button></div>${foods.length ? foods.map((f,index) => { const quantity=f[6]||1; return `<div class="food"><div class="food-name">${escapeHtml(f[0])}${quantity>1?`<span class="food-quantity">×${quantity}</span>`:""}</div><div class="food-macros">${macroText({cal:f[1]*quantity,p:f[2]*quantity,c:f[3]*quantity,fat:f[4]*quantity,s:f[5]*quantity})}</div><div class="food-actions"><button class="edit-food" data-action="edit" data-day="${day}" data-meal="${meal}" data-index="${index}" aria-label="Edit ${escapeHtml(f[0])}">✎</button><button class="delete-food" data-action="delete" data-day="${day}" data-meal="${meal}" data-index="${index}" aria-label="Delete ${escapeHtml(f[0])}">×</button></div></div>`; }).join("") + `<div class="meal-total">Total: ${macroText(mt)}</div>` : `<div class="empty-meal">Nothing logged</div>`}`;
+      section.innerHTML = `<div class="meal-heading"><strong>${meal}</strong><div class="meal-heading-actions">${foods.length?`<button class="save-meal" data-save-meal="${meal}" data-day="${day}" aria-label="Save ${day} ${meal} to Food Library" title="Save meal to Food Library">▣</button>`:""}<button data-day="${day}" data-meal="${meal}" aria-label="Add to ${meal}">+</button></div></div>${foods.length ? foods.map((f,index) => { const quantity=f[6]||1; return `<div class="food"><div class="food-name">${escapeHtml(f[0])}${quantity>1?`<span class="food-quantity">×${quantity}</span>`:""}</div><div class="food-macros">${macroText({cal:f[1]*quantity,p:f[2]*quantity,c:f[3]*quantity,fat:f[4]*quantity,s:f[5]*quantity})}</div><div class="food-actions"><button class="edit-food" data-action="edit" data-day="${day}" data-meal="${meal}" data-index="${index}" aria-label="Edit ${escapeHtml(f[0])}">✎</button><button class="delete-food" data-action="delete" data-day="${day}" data-meal="${meal}" data-index="${index}" aria-label="Delete ${escapeHtml(f[0])}">×</button></div></div>`; }).join("") + `<div class="meal-total">Total: ${macroText(mt)}</div>` : `<div class="empty-meal">Nothing logged</div>`}`;
       card.append(section);
     });
     grid.append(card);
@@ -174,12 +175,12 @@ function calculatedRecipeTotal(rows=editorRows()) { return sumFoods(rows.map(r=>
 function updateBuilderTotal() { document.querySelector("#builderTotal").textContent=macroText(calculatedRecipeTotal()); }
 
 function openRecipeBuilder(recipe=null) {
-  editingRecipeId=recipe?.id ?? null;
-  document.querySelector("#recipeDialogEyebrow").textContent="RECIPE CALCULATOR"; document.querySelector("#recipeDialogTitle").textContent=recipe?`Edit ${recipe.name}`:"Create a recipe";
+  const isExisting=recipe?.id!==undefined&&recipe?.id!==null; editingRecipeId=isExisting?recipe.id:null;
+  document.querySelector("#recipeDialogEyebrow").textContent=recipe&&!isExisting?"SAVE LOGGED MEAL":"RECIPE CALCULATOR"; document.querySelector("#recipeDialogTitle").textContent=isExisting?`Edit ${recipe.name}`:recipe?"Save meal to Food Library":"Create a recipe";
   document.querySelector("#recipeReadView").hidden=true; document.querySelector("#recipeEditView").hidden=false;
   document.querySelector("#newRecipeName").value=recipe?.name||""; document.querySelector("#newRecipeType").value=recipe?.type||"meal"; document.querySelector("#ingredientEditor").innerHTML=`<div class="ingredient-editor-columns"><span>Ingredient</span><span>Quantity / serving</span><span>Calories</span><span>Protein</span><span>Carbs</span><span>Fats</span><span>Sugars</span><span></span></div>`;
   if(recipe?.rows?.length) recipe.rows.forEach(row=>ingredientRow(row)); else { ingredientRow(); ingredientRow(); } updateBuilderTotal();
-  document.querySelector("#recipeDialogActions").innerHTML=`<button value="cancel" class="ghost-button" formnovalidate>Cancel</button><button type="button" class="primary-button" id="saveRecipe">${recipe?"Save changes":"Save recipe"}</button>`;
+  document.querySelector("#recipeDialogActions").innerHTML=`<button value="cancel" class="ghost-button" formnovalidate>Cancel</button><button type="button" class="primary-button" id="saveRecipe">${isExisting?"Save changes":"Save to library"}</button>`;
   document.querySelector("#saveRecipe").addEventListener("click",saveRecipeChanges);
   document.querySelector("#recipeDialog").showModal();
 }
@@ -196,6 +197,13 @@ function saveRecipeChanges() {
 function prefillRecipe(recipe) {
   openFood("Monday", recipe.type === "breakfast" ? "Breakfast" : recipe.type === "side" ? "Dinner" : "Lunch");
   document.querySelector("#foodName").value=recipe.name; [["Calories",recipe.cal],["Protein",recipe.p],["Carbs",recipe.c],["Fat",recipe.fat],["Sugar",recipe.s]].forEach(([k,v])=>document.querySelector(`#food${k}`).value=v);
+}
+
+function saveLoggedMeal(day,meal) {
+  const foods=loadWeek()[day][meal]||[]; if(!foods.length)return;
+  const rows=foods.map(food=>{ const quantity=food[6]||1; return [food[0],`${quantity} serving${quantity===1?"":"s"}`,tidy(food[1]*quantity),tidy(food[2]*quantity),tidy(food[3]*quantity),tidy(food[4]*quantity),tidy(food[5]*quantity)]; });
+  const name=foods.length<=2?foods.map(food=>food[0]).join(" + "):`${foods[0][0]} meal`;
+  openRecipeBuilder({name,type:meal==="Breakfast"?"breakfast":"meal",rows,ingredients:rows.map(row=>row[0])});
 }
 
 function loadWeights() { return JSON.parse(localStorage.getItem("daily-fuel-weights") || "[]").sort((a,b)=>a.date.localeCompare(b.date)); }
@@ -231,13 +239,14 @@ function renderInsights() {
 }
 
 function openDayDetail(day) {
+  activeDayDetail=day;
   const data=loadWeek(), meals=data[day], days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"], index=days.indexOf(day), date=getSunday(); date.setDate(date.getDate()+index); const total=dayTotal(meals);
   document.querySelector("#dayDetailTitle").textContent=day; document.querySelector("#dayDetailDate").textContent=formatDate(date,{weekday:"long",month:"long",day:"numeric",year:"numeric"});
   const caloriePercent=Math.round(total.cal/GOALS.calories*100), proteinPercent=Math.round(total.p/GOALS.protein*100);
   document.querySelector("#dayDetailSummary").innerHTML=`<div><small>DAY TOTAL</small><strong>${macroText(total)}</strong></div><div class="day-goal-meter"><span><b>Calories</b>${tidy(total.cal)} / ${tidy(GOALS.calories)}</span><div><i style="width:${Math.min(caloriePercent,100)}%"></i></div></div><div class="day-goal-meter protein"><span><b>Protein</b>${tidy(total.p)}g / ${tidy(GOALS.protein)}g</span><div><i style="width:${Math.min(proteinPercent,100)}%"></i></div></div>`;
   const order=["Breakfast","Snacks","Lunch","Shake","Dinner"];
-  document.querySelector("#dayDetailMeals").innerHTML=order.map(meal=>{ const foods=meals[meal]||[], total=sumFoods(foods); return `<section class="day-detail-meal" data-meal="${meal.toLowerCase()}"><div class="day-detail-meal-head"><strong>${meal}</strong><span>${foods.length} item${foods.length===1?"":"s"}</span></div><div class="day-detail-foods">${foods.length?foods.map(food=>{const quantity=food[6]||1; return `<div class="day-detail-food"><strong>${escapeHtml(food[0])}${quantity>1?` <em>×${quantity}</em>`:""}</strong><span>${macroText({cal:food[1]*quantity,p:food[2]*quantity,c:food[3]*quantity,fat:food[4]*quantity,s:food[5]*quantity})}</span></div>`;}).join(""):`<p>Nothing logged</p>`}</div><div class="day-detail-meal-total"><span>Meal total</span><strong>${macroText(total)}</strong></div></section>`;}).join("");
-  document.querySelector("#dayDetailDialog").showModal();
+  document.querySelector("#dayDetailMeals").innerHTML=order.map(meal=>{ const foods=meals[meal]||[], total=sumFoods(foods); return `<section class="day-detail-meal" data-meal="${meal.toLowerCase()}"><div class="day-detail-meal-head"><strong>${meal}</strong><div><span>${foods.length} item${foods.length===1?"":"s"}</span><button data-day-modal-add="${meal}" aria-label="Add to ${day} ${meal}">＋</button></div></div><div class="day-detail-foods">${foods.length?foods.map((food,itemIndex)=>{const quantity=food[6]||1; return `<div class="day-detail-food"><strong>${escapeHtml(food[0])}${quantity>1?` <em>×${quantity}</em>`:""}</strong><span>${macroText({cal:food[1]*quantity,p:food[2]*quantity,c:food[3]*quantity,fat:food[4]*quantity,s:food[5]*quantity})}</span><div class="day-detail-food-actions"><button data-day-modal-edit="${itemIndex}" data-meal="${meal}" aria-label="Edit ${escapeHtml(food[0])}">✎ Edit</button><button data-day-modal-delete="${itemIndex}" data-meal="${meal}" aria-label="Delete ${escapeHtml(food[0])}">×</button></div></div>`;}).join(""):`<p>Nothing logged</p>`}</div><div class="day-detail-meal-total"><span>Meal total</span><strong>${macroText(total)}</strong></div></section>`;}).join("");
+  const dialog=document.querySelector("#dayDetailDialog"); if(!dialog.open)dialog.showModal();
 }
 
 function switchPage(page) {
@@ -272,13 +281,23 @@ function showAppModal({title,message,confirmText="Okay",cancelText="",tone="info
 function openFood(day="Monday", meal="Breakfast", food=null, index=null) {
   const form=document.querySelector("#foodForm"); form.reset(); editingFood=food ? {day,meal,index} : null;
   document.querySelector("#foodDialogTitle").textContent=food ? "Edit food" : "Add food"; document.querySelector("#saveFood").textContent=food ? "Save changes" : "Add to day";
+  document.querySelector("#saveFoodToLibrary").hidden=!food;
   document.querySelector("#foodDay").value=day; document.querySelector("#foodMeal").value=meal;
   if(food){ document.querySelector("#foodName").value=food[0]; document.querySelector("#foodQuantity").value=food[6]||1; [["Calories",food[1]],["Protein",food[2]],["Carbs",food[3]],["Fat",food[4]],["Sugar",food[5]]].forEach(([k,v])=>document.querySelector(`#food${k}`).value=v); }
   updateQuantityHint(); document.querySelector("#foodDialog").showModal(); setTimeout(()=>document.querySelector("#foodName").focus(),50);
 }
 
+function saveEditedFoodToLibrary() {
+  const name=document.querySelector("#foodName").value.trim(); if(!name){ showAppModal({title:"Give this food a name",message:"A name is required before the item can be saved to your Food Library.",confirmText:"Got it"}); return; }
+  const values=["Calories","Protein","Carbs","Fat","Sugar"].map(key=>tidy(Number(document.querySelector(`#food${key}`).value)||0)), meal=document.querySelector("#foodMeal").value;
+  const rows=[[name,"1 serving",...values]], recipeData={name,type:meal==="Breakfast"?"breakfast":"meal",cal:values[0],p:values[1],c:values[2],fat:values[3],s:values[4],ingredients:[name],rows};
+  const stored=JSON.parse(localStorage.getItem("daily-fuel-custom-recipes")||"[]"); stored.push(recipeData); localStorage.setItem("daily-fuel-custom-recipes",JSON.stringify(stored)); RECIPES.push({...recipeData,id:`custom-${stored.length-1}`}); populateQuickRecipes();
+  showAppModal({title:"Item saved to your library",message:`${name} is now available in the Food Library and the Quick Entry recipe picker.`,confirmText:"Done"});
+}
+
 const daySelect = document.querySelector("#foodDay"); ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"].forEach(d => daySelect.add(new Option(d,d)));
 document.querySelector("#weekGrid").addEventListener("click", async e => {
+  const saveMeal=e.target.closest("button[data-save-meal]"); if(saveMeal){ saveLoggedMeal(saveMeal.dataset.day,saveMeal.dataset.saveMeal); return; }
   const openDay=e.target.closest("button[data-open-day]"); if(openDay){ openDayDetail(openDay.dataset.openDay); return; }
   const clearDay=e.target.closest("button[data-clear-day]");
   if(clearDay){ const day=clearDay.dataset.clearDay; if(await showAppModal({title:`Clear ${day}?`,message:`Every breakfast, lunch, dinner, snack, and shake entry from ${day} will be removed. This cannot be undone.`,confirmText:"Clear day",cancelText:"Keep entries",tone:"danger"})){ const data=loadWeek(); data[day]=Object.fromEntries(MEALS.map(meal=>[meal,[]])); saveWeek(data); render(); } return; }
@@ -286,8 +305,15 @@ document.querySelector("#weekGrid").addEventListener("click", async e => {
   if(action){ const data=loadWeek(), {day,meal}=action.dataset, index=Number(action.dataset.index); if(action.dataset.action==="delete"){ data[day][meal].splice(index,1); saveWeek(data); render(); } else openFood(day,meal,data[day][meal][index],index); return; }
   const b=e.target.closest("button[data-day]"); if(b) openFood(b.dataset.day,b.dataset.meal);
 });
-document.querySelector("#closeDayDetail").addEventListener("click",()=>document.querySelector("#dayDetailDialog").close());
+document.querySelector("#closeDayDetail").addEventListener("click",()=>{ document.querySelector("#dayDetailDialog").close(); activeDayDetail=null; });
+document.querySelector("#dayDetailDialog").addEventListener("cancel",()=>{ activeDayDetail=null; });
+document.querySelector("#dayDetailMeals").addEventListener("click",async e=>{
+  const add=e.target.closest("[data-day-modal-add]"); if(add){ openFood(activeDayDetail,add.dataset.dayModalAdd); return; }
+  const edit=e.target.closest("[data-day-modal-edit]"); if(edit){ const data=loadWeek(), meal=edit.dataset.meal, index=Number(edit.dataset.dayModalEdit); openFood(activeDayDetail,meal,data[activeDayDetail][meal][index],index); return; }
+  const remove=e.target.closest("[data-day-modal-delete]"); if(remove){ const meal=remove.dataset.meal,index=Number(remove.dataset.dayModalDelete),data=loadWeek(),food=data[activeDayDetail][meal][index]; if(await showAppModal({title:`Remove ${food[0]}?`,message:`This item will be removed from ${activeDayDetail} ${meal}.`,confirmText:"Remove item",cancelText:"Keep it",tone:"danger"})){ data[activeDayDetail][meal].splice(index,1); saveWeek(data); render(); openDayDetail(activeDayDetail); } }
+});
 document.querySelector("#addFoodTop").addEventListener("click",()=> currentPage === "library" ? openRecipeBuilder() : openFood());
+document.querySelector("#saveFoodToLibrary").addEventListener("click",saveEditedFoodToLibrary);
 document.querySelector("#addIngredientRow").addEventListener("click",()=>ingredientRow());
 document.querySelectorAll(".nav-item[data-page]").forEach(b => b.addEventListener("click",()=>switchPage(b.dataset.page)));
 document.querySelector("#recipeSearch").addEventListener("input",renderLibrary);
@@ -303,7 +329,7 @@ document.querySelector("#foodForm").addEventListener("submit", e => {
   e.preventDefault(); const data=loadWeek(), day=daySelect.value, meal=document.querySelector("#foodMeal").value;
   const entry=[document.querySelector("#foodName").value, ...["Calories","Protein","Carbs","Fat","Sugar"].map(k=>tidy(Number(document.querySelector(`#food${k}`).value))),Math.max(1,Number(document.querySelector("#foodQuantity").value)||1)];
   if(editingFood){ data[editingFood.day][editingFood.meal].splice(editingFood.index,1); data[day][meal].push(entry); } else data[day][meal].push(entry);
-  saveWeek(data); e.target.reset(); document.querySelector("#foodDialog").close(); render();
+  saveWeek(data); e.target.reset(); document.querySelector("#foodDialog").close(); render(); if(activeDayDetail)openDayDetail(activeDayDetail);
 });
 document.querySelector("#prevWeek").addEventListener("click",()=>{weekOffset--;render();}); document.querySelector("#nextWeek").addEventListener("click",()=>{weekOffset++;render();}); document.querySelector("#todayButton").addEventListener("click",()=>{weekOffset=0;render();});
 document.querySelector("#editGoals").addEventListener("click",()=>switchPage("goals"));
