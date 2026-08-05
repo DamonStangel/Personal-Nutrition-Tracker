@@ -1,5 +1,6 @@
 const MEALS = ["Breakfast", "Lunch", "Dinner", "Snacks", "Shake"];
-const GOALS = { calories: 2500, protein: 190, carbs: 275, fat: 70, sugar: 38 };
+const DEFAULT_GOALS = { calories: 2500, protein: 190, carbs: 275, fat: 70, sugar: 38 };
+let GOALS = {...DEFAULT_GOALS,...JSON.parse(localStorage.getItem("daily-fuel-goals") || "{}")};
 let weekOffset = 0;
 let activeRecipeFilter = "all";
 let currentPage = "weekly";
@@ -89,6 +90,13 @@ function loadWeek() {
 function saveWeek(data) { localStorage.setItem(`daily-fuel-${getWeekKey()}`, JSON.stringify(data)); }
 function sumFoods(foods) { return foods.reduce((a,f) => ({cal:a.cal+f[1],p:a.p+f[2],c:a.c+f[3],fat:a.fat+f[4],s:a.s+f[5]}), {cal:0,p:0,c:0,fat:0,s:0}); }
 function dayTotal(day) { return MEALS.reduce((total, meal) => { const m = sumFoods(day[meal]); Object.keys(total).forEach(k => total[k] += m[k]); return total; }, {cal:0,p:0,c:0,fat:0,s:0}); }
+function weekKeyForDate(date) { const d=new Date(date); d.setHours(12,0,0,0); d.setDate(d.getDate()-d.getDay()); return d.toISOString().slice(0,10); }
+function dataForDate(date) { const key=weekKeyForDate(date), saved=localStorage.getItem(`daily-fuel-${key}`); if(saved) return JSON.parse(saved); if(key===weekKeyForDate(new Date())){ const data=blankWeek(); Object.entries(sample).forEach(([day,meals])=>Object.assign(data[day],meals)); return data; } return blankWeek(); }
+function calculateStreak() {
+  let streak=0, cursor=new Date(); cursor.setHours(12,0,0,0);
+  for(let i=0;i<366;i++){ const data=dataForDate(cursor), dayName=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][cursor.getDay()]; if(dayTotal(data[dayName]).cal<=0) break; streak++; cursor.setDate(cursor.getDate()-1); }
+  return streak;
+}
 function tidy(n) { return Number.isInteger(n) ? n : Math.round(n * 10) / 10; }
 function macroText(t) { return `${tidy(t.cal)}cal · ${tidy(t.p)}p · ${tidy(t.c)}c · ${tidy(t.fat)}f · ${tidy(t.s)}s`; }
 function formatDate(d, opts) { return new Intl.DateTimeFormat("en-US", opts).format(d); }
@@ -106,7 +114,7 @@ function render() {
     const card = document.createElement("article"); card.className = `day-card${isToday ? " today" : ""}`;
     card.innerHTML = `<header class="day-header"><div class="day-title"><h3>${day}</h3><div class="day-header-actions"><span>${formatDate(date,{month:"short",day:"numeric"})}</span><button class="clear-day" data-clear-day="${day}" aria-label="Clear ${day}" title="Clear ${day}">⌫</button></div></div><div class="day-total">${tidy(total.cal).toLocaleString()} cal<small>${tidy(total.p)}p · ${tidy(total.c)}c · ${tidy(total.fat)}f · ${tidy(total.s)}s</small></div><div class="progress"><span style="width:${Math.min(total.cal/GOALS.calories*100,100)}%"></span></div></header>`;
     MEALS.forEach(meal => {
-      const foods = meals[meal] || [], mt = sumFoods(foods), section = document.createElement("section"); section.className = "meal";
+      const foods = meals[meal] || [], mt = sumFoods(foods), section = document.createElement("section"); section.className = "meal"; section.dataset.meal=meal.toLowerCase();
       section.innerHTML = `<div class="meal-heading"><strong>${meal}</strong><button data-day="${day}" data-meal="${meal}" aria-label="Add to ${meal}">+</button></div>${foods.length ? foods.map((f,index) => `<div class="food"><div class="food-name">${escapeHtml(f[0])}</div><div class="food-macros">${macroText({cal:f[1],p:f[2],c:f[3],fat:f[4],s:f[5]})}</div><div class="food-actions"><button class="edit-food" data-action="edit" data-day="${day}" data-meal="${meal}" data-index="${index}" aria-label="Edit ${escapeHtml(f[0])}">✎</button><button class="delete-food" data-action="delete" data-day="${day}" data-meal="${meal}" data-index="${index}" aria-label="Delete ${escapeHtml(f[0])}">×</button></div></div>`).join("") + `<div class="meal-total">Total: ${macroText(mt)}</div>` : `<div class="empty-meal">Nothing logged</div>`}`;
       card.append(section);
     });
@@ -117,6 +125,8 @@ function render() {
   document.querySelector("#weeklyCalories").textContent = `${Math.round(week.cal).toLocaleString()} / ${target.toLocaleString()}`;
   document.querySelector("#weeklySubtext").textContent = `${Math.max(target-week.cal,0).toLocaleString(undefined,{maximumFractionDigits:0})} calories remaining`;
   document.querySelector("#avgProtein").textContent = `${tidy(week.p/7)}g`; document.querySelector("#avgCarbs").textContent = `${tidy(week.c/7)}g`; document.querySelector("#avgFats").textContent = `${tidy(week.fat/7)}g`;
+  document.querySelector("#proteinGoalLabel").textContent=`Goal ${tidy(GOALS.protein)}g`; document.querySelector("#carbsGoalLabel").textContent=`Goal ${tidy(GOALS.carbs)}g`; document.querySelector("#fatGoalLabel").textContent=`Goal ${tidy(GOALS.fat)}g`;
+  const streak=calculateStreak(); document.querySelector("#streakCount").textContent=`${streak} day streak`; document.querySelector("#streakMessage").textContent=streak ? "Keep it rolling" : "Log today to begin";
 }
 
 function renderLibrary() {
@@ -181,17 +191,33 @@ function prefillRecipe(recipe) {
   document.querySelector("#foodName").value=recipe.name; [["Calories",recipe.cal],["Protein",recipe.p],["Carbs",recipe.c],["Fat",recipe.fat],["Sugar",recipe.s]].forEach(([k,v])=>document.querySelector(`#food${k}`).value=v);
 }
 
+function loadWeights() { return JSON.parse(localStorage.getItem("daily-fuel-weights") || "[]").sort((a,b)=>a.date.localeCompare(b.date)); }
+function renderGoals() {
+  [["Calories",GOALS.calories],["Protein",GOALS.protein],["Carbs",GOALS.carbs],["Fat",GOALS.fat],["Sugar",GOALS.sugar]].forEach(([key,value])=>document.querySelector(`#goal${key}`).value=value);
+  const sunday=new Date(); sunday.setDate(sunday.getDate()-sunday.getDay()); document.querySelector("#weightDate").value=sunday.toISOString().slice(0,10);
+  const weights=loadWeights(), change=document.querySelector("#weightChange"), chart=document.querySelector("#weightChart"), history=document.querySelector("#weightHistory");
+  if(!weights.length){ change.textContent="No data yet"; change.classList.remove("gain"); chart.innerHTML=`<div class="empty-weight">Add your first weekly check-in to start the trend.</div>`; history.innerHTML=""; return; }
+  const delta=tidy(weights.at(-1).weight-weights[0].weight); change.textContent=weights.length===1?"Baseline saved":`${delta>0?"+":""}${delta} lb overall`; change.classList.toggle("gain",delta>0);
+  const values=weights.map(w=>w.weight), min=Math.min(...values)-2, max=Math.max(...values)+2, span=max-min||1, width=640, height=150, pad=26;
+  const points=weights.map((w,i)=>({x:weights.length===1?width/2:pad+i*(width-pad*2)/(weights.length-1),y:pad+(max-w.weight)*(height-pad*2)/span,...w}));
+  const path=points.map((p,i)=>`${i?"L":"M"}${p.x},${p.y}`).join(" "), area=`${path} L${points.at(-1).x},${height} L${points[0].x},${height} Z`;
+  chart.innerHTML=`<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Weight trend"><defs><linearGradient id="weightGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fa178" stop-opacity=".45"/><stop offset="1" stop-color="#7fa178" stop-opacity="0"/></linearGradient></defs>${points.length>1?`<path class="chart-area" d="${area}"/><path class="chart-line" d="${path}"/>`:""}${points.map(p=>`<circle class="chart-dot" cx="${p.x}" cy="${p.y}" r="5"/><text class="chart-label" text-anchor="middle" x="${p.x}" y="${p.y-11}">${tidy(p.weight)} lb</text><text class="chart-label" text-anchor="middle" x="${p.x}" y="${height-3}">${formatDate(new Date(`${p.date}T12:00:00`),{month:"short",day:"numeric"})}</text>`).join("")}</svg>`;
+  history.innerHTML=[...weights].reverse().map(w=>`<div class="weight-row"><span>Week of ${formatDate(new Date(`${w.date}T12:00:00`),{month:"short",day:"numeric",year:"numeric"})}</span><strong>${tidy(w.weight)} lb</strong><button data-remove-weight="${w.date}" aria-label="Remove weight from ${w.date}">×</button></div>`).join("");
+}
+
 function switchPage(page) {
   currentPage = page;
   const library = page === "library";
-  document.querySelector("#weeklyPage").hidden = library; document.querySelector("#libraryPage").hidden = !library;
-  document.querySelector(".week-controls").hidden = library;
-  document.querySelector("#clearWeek").hidden = library;
-  document.querySelector("#pageEyebrow").textContent = library ? "RECIPES & SAVED FOODS" : "NUTRITION OVERVIEW";
-  document.querySelector("#pageTitle").textContent = library ? "Food library" : "Weekly log";
+  const goals = page === "goals";
+  document.querySelector("#weeklyPage").hidden = page!=="weekly"; document.querySelector("#libraryPage").hidden = !library; document.querySelector("#goalsPage").hidden=!goals;
+  document.querySelector(".week-controls").hidden = page!=="weekly";
+  document.querySelector("#clearWeek").hidden = page!=="weekly"; document.querySelector("#addFoodTop").hidden=goals;
+  document.querySelector("#pageEyebrow").textContent = library ? "RECIPES & SAVED FOODS" : goals ? "TARGETS & PROGRESS" : "NUTRITION OVERVIEW";
+  document.querySelector("#pageTitle").textContent = library ? "Food library" : goals ? "Goals" : "Weekly log";
   document.querySelector("#addFoodTop").innerHTML = library ? "＋ New recipe" : "<span>＋</span> Add food";
   document.querySelectorAll(".nav-item[data-page]").forEach(b => b.classList.toggle("active", b.dataset.page === page));
   if (library) renderLibrary();
+  if (goals) renderGoals();
 }
 function escapeHtml(value) { const d=document.createElement("div"); d.textContent=value; return d.innerHTML; }
 function showAppModal({title,message,confirmText="Okay",cancelText="",tone="info"}) {
@@ -238,8 +264,11 @@ document.querySelector("#foodForm").addEventListener("submit", e => {
   saveWeek(data); e.target.reset(); document.querySelector("#foodDialog").close(); render();
 });
 document.querySelector("#prevWeek").addEventListener("click",()=>{weekOffset--;render();}); document.querySelector("#nextWeek").addEventListener("click",()=>{weekOffset++;render();}); document.querySelector("#todayButton").addEventListener("click",()=>{weekOffset=0;render();});
-document.querySelector("#editGoals").addEventListener("click",()=>showAppModal({title:"Goal editing is coming next",message:"Your current daily target is 2,500 calories. Soon you'll be able to adjust every macro target here.",confirmText:"Sounds good"}));
+document.querySelector("#editGoals").addEventListener("click",()=>switchPage("goals"));
 document.querySelector("#clearWeek").addEventListener("click",async()=>{ if(await showAppModal({title:"Clear the entire week?",message:"Every food entry from Sunday through Saturday will be removed. This cannot be undone.",confirmText:"Clear week",cancelText:"Keep entries",tone:"danger"})){ saveWeek(blankWeek()); render(); } });
+document.querySelector("#goalsForm").addEventListener("submit",e=>{ e.preventDefault(); GOALS={calories:Number(document.querySelector("#goalCalories").value),protein:Number(document.querySelector("#goalProtein").value),carbs:Number(document.querySelector("#goalCarbs").value),fat:Number(document.querySelector("#goalFat").value),sugar:Number(document.querySelector("#goalSugar").value)}; localStorage.setItem("daily-fuel-goals",JSON.stringify(GOALS)); render(); showAppModal({title:"Goals updated",message:"Your weekly dashboard now uses these nutrition targets.",confirmText:"Done"}); });
+document.querySelector("#weightForm").addEventListener("submit",e=>{ e.preventDefault(); const date=document.querySelector("#weightDate").value, weight=Number(document.querySelector("#weightValue").value), entries=loadWeights().filter(w=>w.date!==date); entries.push({date,weight}); localStorage.setItem("daily-fuel-weights",JSON.stringify(entries)); document.querySelector("#weightValue").value=""; renderGoals(); });
+document.querySelector("#weightHistory").addEventListener("click",async e=>{ const button=e.target.closest("[data-remove-weight]"); if(!button)return; if(await showAppModal({title:"Remove this check-in?",message:"This weight entry will be removed from your progress history.",confirmText:"Remove",cancelText:"Keep it",tone:"danger"})){ const entries=loadWeights().filter(w=>w.date!==button.dataset.removeWeight); localStorage.setItem("daily-fuel-weights",JSON.stringify(entries)); renderGoals(); } });
 const themeToggle=document.querySelector("#themeToggle");
 function setTheme(dark){ document.body.classList.toggle("dark",dark); themeToggle.textContent=dark?"☀":"☾"; themeToggle.setAttribute("aria-label",dark?"Switch to light mode":"Switch to dark mode"); localStorage.setItem("daily-fuel-theme",dark?"dark":"light"); }
 themeToggle.addEventListener("click",()=>setTheme(!document.body.classList.contains("dark")));
