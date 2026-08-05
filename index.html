@@ -47,7 +47,11 @@
         <button id="todayButton" class="date-button"><span id="weekLabel"></span><small>This week</small></button>
         <button id="nextWeek" class="icon-button" aria-label="Next week">→</button>
       </div>
-      <button id="addFoodTop" class="primary-button"><span>＋</span> Add food</button>
+      <div class="top-actions">
+        <button id="themeToggle" class="icon-button theme-toggle" type="button" aria-label="Switch to dark mode" title="Toggle light/dark mode">☾</button>
+        <button id="clearWeek" class="danger-ghost" type="button">Clear week</button>
+        <button id="addFoodTop" class="primary-button"><span>＋</span> Add food</button>
+      </div>
     </header>
 
     <div id="weeklyPage" class="page-panel">
@@ -87,9 +91,10 @@
   <dialog id="foodDialog">
     <form id="foodForm" method="dialog">
       <div class="dialog-heading">
-        <div><p class="eyebrow">QUICK ENTRY</p><h2>Add food</h2></div>
+        <div><p class="eyebrow">QUICK ENTRY</p><h2 id="foodDialogTitle">Add food</h2></div>
         <button class="close-button" value="cancel" formnovalidate aria-label="Close">×</button>
       </div>
+      <label class="full library-picker">Choose from your Food Library<select id="recipeQuickSelect"><option value="">Select a saved recipe…</option></select><small>Optional — selecting a recipe fills in all macro fields below.</small></label>
       <label>Day<select id="foodDay" required></select></label>
       <label>Meal<select id="foodMeal" required><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snacks</option><option>Shake</option></select></label>
       <label class="full">Food name<input id="foodName" required placeholder="e.g. Chicken salad ranch"></label>
@@ -119,6 +124,19 @@
       </div>
       <div class="dialog-actions full" id="recipeDialogActions"></div>
     </form>
+  </dialog>
+
+  <dialog id="appModal" class="app-modal">
+    <div class="app-modal-content">
+      <button id="appModalClose" class="close-button" type="button" aria-label="Close message">×</button>
+      <div id="appModalIcon" class="app-modal-icon">i</div>
+      <h2 id="appModalTitle">Message</h2>
+      <p id="appModalMessage"></p>
+      <div class="app-modal-actions">
+        <button id="appModalCancel" class="ghost-button" type="button">Cancel</button>
+        <button id="appModalConfirm" class="primary-button" type="button">Okay</button>
+      </div>
+    </div>
   </dialog>
 
   <script src="recipe-details.js"></script>

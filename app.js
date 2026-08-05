@@ -3,6 +3,7 @@ const GOALS = { calories: 2500, protein: 190, carbs: 275, fat: 70, sugar: 38 };
 let weekOffset = 0;
 let activeRecipeFilter = "all";
 let currentPage = "weekly";
+let editingFood = null;
 
 const RECIPES = [
   ["Breakfast Bagel","breakfast",305,36,34,28,6,["2 oz ham","Tomato slices","Cheese spread","3/4 cup egg whites","Thin bagel"]],
@@ -103,10 +104,10 @@ function render() {
     const total = dayTotal(meals); Object.keys(week).forEach(k => week[k] += total[k]);
     const isToday = date.toDateString() === new Date().toDateString();
     const card = document.createElement("article"); card.className = `day-card${isToday ? " today" : ""}`;
-    card.innerHTML = `<header class="day-header"><div class="day-title"><h3>${day}</h3><span>${formatDate(date,{month:"short",day:"numeric"})}</span></div><div class="day-total">${tidy(total.cal).toLocaleString()} cal<small>${tidy(total.p)}p · ${tidy(total.c)}c · ${tidy(total.fat)}f · ${tidy(total.s)}s</small></div><div class="progress"><span style="width:${Math.min(total.cal/GOALS.calories*100,100)}%"></span></div></header>`;
+    card.innerHTML = `<header class="day-header"><div class="day-title"><h3>${day}</h3><div class="day-header-actions"><span>${formatDate(date,{month:"short",day:"numeric"})}</span><button class="clear-day" data-clear-day="${day}" aria-label="Clear ${day}" title="Clear ${day}">⌫</button></div></div><div class="day-total">${tidy(total.cal).toLocaleString()} cal<small>${tidy(total.p)}p · ${tidy(total.c)}c · ${tidy(total.fat)}f · ${tidy(total.s)}s</small></div><div class="progress"><span style="width:${Math.min(total.cal/GOALS.calories*100,100)}%"></span></div></header>`;
     MEALS.forEach(meal => {
       const foods = meals[meal] || [], mt = sumFoods(foods), section = document.createElement("section"); section.className = "meal";
-      section.innerHTML = `<div class="meal-heading"><strong>${meal}</strong><button data-day="${day}" data-meal="${meal}" aria-label="Add to ${meal}">+</button></div>${foods.length ? foods.map(f => `<div class="food"><div class="food-name">${escapeHtml(f[0])}</div><div class="food-macros">${macroText({cal:f[1],p:f[2],c:f[3],fat:f[4],s:f[5]})}</div></div>`).join("") + `<div class="meal-total">Total: ${macroText(mt)}</div>` : `<div class="empty-meal">Nothing logged</div>`}`;
+      section.innerHTML = `<div class="meal-heading"><strong>${meal}</strong><button data-day="${day}" data-meal="${meal}" aria-label="Add to ${meal}">+</button></div>${foods.length ? foods.map((f,index) => `<div class="food"><div class="food-name">${escapeHtml(f[0])}</div><div class="food-macros">${macroText({cal:f[1],p:f[2],c:f[3],fat:f[4],s:f[5]})}</div><div class="food-actions"><button class="edit-food" data-action="edit" data-day="${day}" data-meal="${meal}" data-index="${index}" aria-label="Edit ${escapeHtml(f[0])}">✎</button><button class="delete-food" data-action="delete" data-day="${day}" data-meal="${meal}" data-index="${index}" aria-label="Delete ${escapeHtml(f[0])}">×</button></div></div>`).join("") + `<div class="meal-total">Total: ${macroText(mt)}</div>` : `<div class="empty-meal">Nothing logged</div>`}`;
       card.append(section);
     });
     grid.append(card);
@@ -169,7 +170,7 @@ function openRecipeBuilder() {
 
 function saveCustomRecipe() {
   const name=document.querySelector("#newRecipeName").value.trim(), rows=editorRows();
-  if(!name || !rows.length || rows.some(r=>!r[0]||!r[1])) { alert("Give the recipe a name and complete every ingredient and quantity."); return; }
+  if(!name || !rows.length || rows.some(r=>!r[0]||!r[1])) { showAppModal({title:"Recipe needs a little more",message:"Give the recipe a name and complete every ingredient and quantity.",confirmText:"Got it"}); return; }
   const total=calculatedRecipeTotal(rows), stored=JSON.parse(localStorage.getItem("daily-fuel-custom-recipes")||"[]");
   const recipe={name,type:document.querySelector("#newRecipeType").value,...total,ingredients:rows.map(r=>r[0]),rows}; stored.push(recipe); localStorage.setItem("daily-fuel-custom-recipes",JSON.stringify(stored));
   RECIPES.push({...recipe,id:`custom-${stored.length-1}`}); document.querySelector("#recipeDialog").close(); renderLibrary();
@@ -185,6 +186,7 @@ function switchPage(page) {
   const library = page === "library";
   document.querySelector("#weeklyPage").hidden = library; document.querySelector("#libraryPage").hidden = !library;
   document.querySelector(".week-controls").hidden = library;
+  document.querySelector("#clearWeek").hidden = library;
   document.querySelector("#pageEyebrow").textContent = library ? "RECIPES & SAVED FOODS" : "NUTRITION OVERVIEW";
   document.querySelector("#pageTitle").textContent = library ? "Food library" : "Weekly log";
   document.querySelector("#addFoodTop").innerHTML = library ? "＋ New recipe" : "<span>＋</span> Add food";
@@ -192,10 +194,32 @@ function switchPage(page) {
   if (library) renderLibrary();
 }
 function escapeHtml(value) { const d=document.createElement("div"); d.textContent=value; return d.innerHTML; }
-function openFood(day="Monday", meal="Breakfast") { document.querySelector("#foodDay").value=day; document.querySelector("#foodMeal").value=meal; document.querySelector("#foodDialog").showModal(); setTimeout(()=>document.querySelector("#foodName").focus(),50); }
+function showAppModal({title,message,confirmText="Okay",cancelText="",tone="info"}) {
+  return new Promise(resolve=>{
+    const dialog=document.querySelector("#appModal"), confirmButton=document.querySelector("#appModalConfirm"), cancelButton=document.querySelector("#appModalCancel");
+    dialog.dataset.tone=tone; document.querySelector("#appModalIcon").textContent=tone==="danger"?"!":"i"; document.querySelector("#appModalTitle").textContent=title; document.querySelector("#appModalMessage").textContent=message;
+    confirmButton.textContent=confirmText; confirmButton.classList.toggle("danger",tone==="danger"); cancelButton.textContent=cancelText||"Cancel"; cancelButton.hidden=!cancelText;
+    const finish=value=>{ dialog.close(); resolve(value); };
+    confirmButton.onclick=()=>finish(true); cancelButton.onclick=()=>finish(false); document.querySelector("#appModalClose").onclick=()=>finish(false); dialog.oncancel=e=>{e.preventDefault();finish(false);};
+    dialog.showModal();
+  });
+}
+function openFood(day="Monday", meal="Breakfast", food=null, index=null) {
+  const form=document.querySelector("#foodForm"); form.reset(); editingFood=food ? {day,meal,index} : null;
+  document.querySelector("#foodDialogTitle").textContent=food ? "Edit food" : "Add food"; document.querySelector("#saveFood").textContent=food ? "Save changes" : "Add to day";
+  document.querySelector("#foodDay").value=day; document.querySelector("#foodMeal").value=meal;
+  if(food){ document.querySelector("#foodName").value=food[0]; [["Calories",food[1]],["Protein",food[2]],["Carbs",food[3]],["Fat",food[4]],["Sugar",food[5]]].forEach(([k,v])=>document.querySelector(`#food${k}`).value=v); }
+  document.querySelector("#foodDialog").showModal(); setTimeout(()=>document.querySelector("#foodName").focus(),50);
+}
 
 const daySelect = document.querySelector("#foodDay"); ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"].forEach(d => daySelect.add(new Option(d,d)));
-document.querySelector("#weekGrid").addEventListener("click", e => { const b=e.target.closest("button[data-day]"); if(b) openFood(b.dataset.day,b.dataset.meal); });
+document.querySelector("#weekGrid").addEventListener("click", async e => {
+  const clearDay=e.target.closest("button[data-clear-day]");
+  if(clearDay){ const day=clearDay.dataset.clearDay; if(await showAppModal({title:`Clear ${day}?`,message:`Every breakfast, lunch, dinner, snack, and shake entry from ${day} will be removed. This cannot be undone.`,confirmText:"Clear day",cancelText:"Keep entries",tone:"danger"})){ const data=loadWeek(); data[day]=Object.fromEntries(MEALS.map(meal=>[meal,[]])); saveWeek(data); render(); } return; }
+  const action=e.target.closest("button[data-action]");
+  if(action){ const data=loadWeek(), {day,meal}=action.dataset, index=Number(action.dataset.index); if(action.dataset.action==="delete"){ data[day][meal].splice(index,1); saveWeek(data); render(); } else openFood(day,meal,data[day][meal][index],index); return; }
+  const b=e.target.closest("button[data-day]"); if(b) openFood(b.dataset.day,b.dataset.meal);
+});
 document.querySelector("#addFoodTop").addEventListener("click",()=> currentPage === "library" ? openRecipeBuilder() : openFood());
 document.querySelector("#addIngredientRow").addEventListener("click",()=>ingredientRow());
 document.querySelectorAll(".nav-item[data-page]").forEach(b => b.addEventListener("click",()=>switchPage(b.dataset.page)));
@@ -209,9 +233,19 @@ document.querySelector("#recipeGrid").addEventListener("click",e=>{
 document.querySelector("#foodForm").addEventListener("submit", e => {
   if (e.submitter?.value === "cancel") return;
   e.preventDefault(); const data=loadWeek(), day=daySelect.value, meal=document.querySelector("#foodMeal").value;
-  data[day][meal].push([document.querySelector("#foodName").value, ...["Calories","Protein","Carbs","Fat","Sugar"].map(k=>Number(document.querySelector(`#food${k}`).value))]);
+  const entry=[document.querySelector("#foodName").value, ...["Calories","Protein","Carbs","Fat","Sugar"].map(k=>Number(document.querySelector(`#food${k}`).value))];
+  if(editingFood){ data[editingFood.day][editingFood.meal].splice(editingFood.index,1); data[day][meal].push(entry); } else data[day][meal].push(entry);
   saveWeek(data); e.target.reset(); document.querySelector("#foodDialog").close(); render();
 });
 document.querySelector("#prevWeek").addEventListener("click",()=>{weekOffset--;render();}); document.querySelector("#nextWeek").addEventListener("click",()=>{weekOffset++;render();}); document.querySelector("#todayButton").addEventListener("click",()=>{weekOffset=0;render();});
-document.querySelector("#editGoals").addEventListener("click",()=>alert("Goal editing is next on the roadmap — the current daily target is 2,500 calories."));
+document.querySelector("#editGoals").addEventListener("click",()=>showAppModal({title:"Goal editing is coming next",message:"Your current daily target is 2,500 calories. Soon you'll be able to adjust every macro target here.",confirmText:"Sounds good"}));
+document.querySelector("#clearWeek").addEventListener("click",async()=>{ if(await showAppModal({title:"Clear the entire week?",message:"Every food entry from Sunday through Saturday will be removed. This cannot be undone.",confirmText:"Clear week",cancelText:"Keep entries",tone:"danger"})){ saveWeek(blankWeek()); render(); } });
+const themeToggle=document.querySelector("#themeToggle");
+function setTheme(dark){ document.body.classList.toggle("dark",dark); themeToggle.textContent=dark?"☀":"☾"; themeToggle.setAttribute("aria-label",dark?"Switch to light mode":"Switch to dark mode"); localStorage.setItem("daily-fuel-theme",dark?"dark":"light"); }
+themeToggle.addEventListener("click",()=>setTheme(!document.body.classList.contains("dark")));
+setTheme(localStorage.getItem("daily-fuel-theme")==="dark");
+
+const quickRecipe=document.querySelector("#recipeQuickSelect");
+RECIPES.forEach(recipe=>quickRecipe.add(new Option(`${recipe.name} — ${tidy(recipe.cal)}cal, ${tidy(recipe.p)}p`,String(recipe.id))));
+quickRecipe.addEventListener("change",()=>{ const recipe=RECIPES.find(r=>String(r.id)===quickRecipe.value); if(!recipe)return; document.querySelector("#foodName").value=recipe.name; [["Calories",recipe.cal],["Protein",recipe.p],["Carbs",recipe.c],["Fat",recipe.fat],["Sugar",recipe.s]].forEach(([k,v])=>document.querySelector(`#food${k}`).value=v); });
 render();
