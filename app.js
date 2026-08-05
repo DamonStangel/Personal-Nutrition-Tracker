@@ -17,25 +17,25 @@ const RECIPES = [
   ["Turkey Pepperoni Chicken Pizza","meal",549.3,63,50,8.5,6,["Chicken breast","Breadcrumbs","Parmesan","Pizza sauce","Fat-free mozzarella","Turkey pepperoni"]],
   ["Taco Bell Sliders","meal",214.5,16,17.5,7.6,5,["King's Hawaiian roll","93/7 beef","Taco seasoning","Fat-free cheddar","Cheese","Quest chips"]],
   ["Penne Spaghetti","meal",515,46.5,53,14,11,["170g 93/7 beef","Protein penne","Ragu chunky sauce"]],
-  ["Apache Penne Spaghetti","meal",387.5,29.3,53,8,11,["85g 93/7 beef","Protein penne","Ragu chunky sauce"]],
+  ["Wifey Penne Spaghetti","meal",387.5,29.3,53,8,11,["85g 93/7 beef","Protein penne","Ragu chunky sauce"]],
   ["Damon Penne Spaghetti Soup","meal",480,45.5,44,13.5,6.5,["170g 93/7 beef","Protein penne","Tomato sauce","Chicken broth"]],
   ["Damon Penne Butter Noodles","meal",540,53.5,40,24,2,["170g 93/7 beef","Protein penne","Fat-free mozzarella","Butter"]],
-  ["Apache Chicken Salad","meal",245,27.5,10.5,10.3,0,["98g chicken breast","Avocado caesar dressing","Spring mix","Colby jack","Croutons"]],
+  ["Wifey Chicken Salad","meal",245,27.5,10.5,10.3,0,["98g chicken breast","Avocado caesar dressing","Spring mix","Colby jack","Croutons"]],
   ["Damon Chicken Salad","meal",450,48.5,8.5,23.8,1,["196g chicken breast","Ranch","Spring mix","Colby jack","Croutons"]],
   ["Chicken Alfredo Pizza - Damon","meal",559,69,40,13,2.5,["196g chicken","Cottage cheese","Low-fat mozzarella","Pita bread","Alfredo sauce"]],
   ["Chicken Alfredo Pizza - Wife","meal",454,48,40,10.5,2.5,["98g chicken","Cottage cheese","Low-fat mozzarella","Pita bread","Alfredo sauce"]],
   ["Chicken Alfredo Pizza","meal",536,66,40,10,2.5,["170g chicken","Cottage cheese","Low-fat mozzarella","Pita bread","Alfredo sauce"]],
   ["Damon Meatloaf","meal",425,39.5,32,15,4,["170g 93/7 beef","Ketchup","Quaker oats"]],
-  ["Apache Meatloaf","meal",297.5,22.3,32,9,4,["85g 93/7 beef","Ketchup","Quaker oats"]],
-  ["DAMETIME Burger Gravy","meal",525,47.5,50,13.5,0,["170g 93/7 beef","White rice","Gravy","Egg whites"]],
-  ["Apache Burger Gravy","meal",347.5,20.3,48,7.5,0,["85g 93/7 beef","White rice","Gravy"]],
+  ["Wifey Meatloaf","meal",297.5,22.3,32,9,4,["85g 93/7 beef","Ketchup","Quaker oats"]],
+  ["Damon Burger Gravy","meal",525,47.5,50,13.5,0,["170g 93/7 beef","White rice","Gravy","Egg whites"]],
+  ["Wifey Burger Gravy","meal",347.5,20.3,48,7.5,0,["85g 93/7 beef","White rice","Gravy"]],
   ["Cheeseburger - Keto Bun","meal",440,48.5,27,20,8,["170g 93/7 beef","Pepper jack","Keto bun","Ketchup","Pickles"]],
   ["Cheeseburger - White Bread","meal",520,44.5,39,20,10,["170g 93/7 beef","Pepper jack","White bread","Ketchup","Pickles"]],
-  ["DAMETIME Taco Salad","meal",685,44.9,38,34,0,["170g 93/7 beef","Taco seasoning","Cheese","Lettuce","Chips"]],
-  ["DAMETIME Chicken Taco Salad","meal",490,50.4,19,21,0,["196g chicken","Taco seasoning","Cheese","Lettuce","Doritos"]],
-  ["DAMETIME Dorito Burger Taco Salad","meal",535,42.9,19,28,0,["170g 93/7 beef","Taco seasoning","Cheese","Lettuce","Doritos"]],
-  ["DAMETIME Mini Tacos","meal",475,48.9,26,24,0,["170g 93/7 beef","Taco seasoning","Cheese","Lettuce","Carb-balance tortillas"]],
-  ["Apache Mini Tacos","meal",347.5,31.7,26,18,0,["85g 93/7 beef","Taco seasoning","Cheese","Lettuce","Carb-balance tortillas"]],
+  ["Damon Taco Salad","meal",685,44.9,38,34,0,["170g 93/7 beef","Taco seasoning","Cheese","Lettuce","Chips"]],
+  ["Damon Chicken Taco Salad","meal",490,50.4,19,21,0,["196g chicken","Taco seasoning","Cheese","Lettuce","Doritos"]],
+  ["Damon Dorito Burger Taco Salad","meal",535,42.9,19,28,0,["170g 93/7 beef","Taco seasoning","Cheese","Lettuce","Doritos"]],
+  ["Damon Mini Tacos","meal",475,48.9,26,24,0,["170g 93/7 beef","Taco seasoning","Cheese","Lettuce","Carb-balance tortillas"]],
+  ["Wifey Mini Tacos","meal",347.5,31.7,26,18,0,["85g 93/7 beef","Taco seasoning","Cheese","Lettuce","Carb-balance tortillas"]],
   ["Egg Drop Chicken Soup","meal",387,56.3,3,9,0,["2 eggs","196g chicken","Carrots","Broth"]],
   ["Cajun Chicken Noodles","meal",647.5,54.3,34.4,33,1.7,["Protein spaghetti","Chicken","Olive oil","Tomatoes","Heavy cream","Parmesan"]],
   ["Pizza Bagels - High Protein","meal",495,33,51,16,5,["Protein bagel","Pizza sauce","Mozzarella","Pepperoni"]],
@@ -280,11 +280,12 @@ function showAppModal({title,message,confirmText="Okay",cancelText="",tone="info
 }
 function openFood(day="Monday", meal="Breakfast", food=null, index=null) {
   const form=document.querySelector("#foodForm"); form.reset(); editingFood=food ? {day,meal,index} : null;
+  document.querySelector("#quickRecipeSearch").value=""; populateQuickRecipes();
   document.querySelector("#foodDialogTitle").textContent=food ? "Edit food" : "Add food"; document.querySelector("#saveFood").textContent=food ? "Save changes" : "Add to day";
   document.querySelector("#saveFoodToLibrary").hidden=!food;
   document.querySelector("#foodDay").value=day; document.querySelector("#foodMeal").value=meal;
   if(food){ document.querySelector("#foodName").value=food[0]; document.querySelector("#foodQuantity").value=food[6]||1; [["Calories",food[1]],["Protein",food[2]],["Carbs",food[3]],["Fat",food[4]],["Sugar",food[5]]].forEach(([k,v])=>document.querySelector(`#food${k}`).value=v); }
-  updateQuantityHint(); document.querySelector("#foodDialog").showModal(); setTimeout(()=>document.querySelector("#foodName").focus(),50);
+  updateQuantityHint(); document.querySelector("#foodDialog").showModal(); setTimeout(()=>document.querySelector(food?"#foodName":"#quickRecipeSearch").focus(),50);
 }
 
 function saveEditedFoodToLibrary() {
@@ -343,8 +344,19 @@ themeToggle.addEventListener("click",()=>setTheme(!document.body.classList.conta
 setTheme(localStorage.getItem("daily-fuel-theme")==="dark");
 
 const quickRecipe=document.querySelector("#recipeQuickSelect");
-function populateQuickRecipes(){ quickRecipe.replaceChildren(new Option("Select a saved recipe…","")); RECIPES.forEach(recipe=>quickRecipe.add(new Option(`${recipe.name} — ${tidy(recipe.cal)}cal, ${tidy(recipe.p)}p`,String(recipe.id)))); }
+const quickRecipeSearch=document.querySelector("#quickRecipeSearch");
+function populateQuickRecipes(){
+  const selected=quickRecipe.value, term=quickRecipeSearch.value.trim().toLowerCase();
+  const matches=RECIPES.filter(recipe=>!term||recipe.name.toLowerCase().includes(term)||(recipe.ingredients||[]).some(ingredient=>String(ingredient).toLowerCase().includes(term)));
+  quickRecipe.replaceChildren(new Option(matches.length?"Select a saved recipe…":"No matching foods or recipes",""));
+  matches.forEach(recipe=>quickRecipe.add(new Option(`${recipe.name} — ${tidy(recipe.cal)}cal, ${tidy(recipe.p)}p`,String(recipe.id))));
+  quickRecipe.disabled=!matches.length;
+  if(matches.some(recipe=>String(recipe.id)===selected)) quickRecipe.value=selected;
+  document.querySelector("#quickRecipeStatus").textContent=term?(matches.length?`${matches.length} match${matches.length===1?"":"es"} found. Select one to fill in its macros.`:"No matches found. Try a recipe name or ingredient."):"Optional — search or select a recipe to fill in all macro fields below.";
+}
 populateQuickRecipes();
+quickRecipeSearch.addEventListener("input",populateQuickRecipes);
+quickRecipeSearch.addEventListener("keydown",event=>{ if(event.key==="Enter"){ event.preventDefault(); const first=quickRecipe.options[1]; if(first){ quickRecipe.value=first.value; quickRecipe.dispatchEvent(new Event("change")); } } });
 quickRecipe.addEventListener("change",()=>{ const recipe=RECIPES.find(r=>String(r.id)===quickRecipe.value); if(!recipe)return; document.querySelector("#foodName").value=recipe.name; [["Calories",recipe.cal],["Protein",recipe.p],["Carbs",recipe.c],["Fat",recipe.fat],["Sugar",recipe.s]].forEach(([k,v])=>document.querySelector(`#food${k}`).value=v); updateQuantityHint(); });
 function updateQuantityHint(){ const quantity=Math.max(1,Number(document.querySelector("#foodQuantity").value)||1), values=["Calories","Protein","Carbs","Fat","Sugar"].map(k=>Number(document.querySelector(`#food${k}`).value)||0); document.querySelector("#quantityHint").textContent=quantity===1?"Macros below are for one serving.":`Entry total: ${macroText({cal:values[0]*quantity,p:values[1]*quantity,c:values[2]*quantity,fat:values[3]*quantity,s:values[4]*quantity})}`; }
 document.querySelector("#decreaseQuantity").addEventListener("click",()=>{ const input=document.querySelector("#foodQuantity"); input.value=Math.max(1,Number(input.value)-1); updateQuantityHint(); });

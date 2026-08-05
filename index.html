@@ -132,7 +132,13 @@
         <div><p class="eyebrow">QUICK ENTRY</p><h2 id="foodDialogTitle">Add food</h2></div>
         <button class="close-button" value="cancel" formnovalidate aria-label="Close">×</button>
       </div>
-      <label class="full library-picker">Choose from your Food Library<select id="recipeQuickSelect"><option value="">Select a saved recipe…</option></select><small>Optional — selecting a recipe fills in all macro fields below.</small></label>
+      <div class="full library-picker">
+        <label for="quickRecipeSearch">Choose from your Food Library</label>
+        <div class="quick-recipe-search"><span aria-hidden="true">⌕</span><input id="quickRecipeSearch" type="search" placeholder="Search recipes or ingredients…" autocomplete="off"></div>
+        <label class="sr-only" for="recipeQuickSelect">Matching foods and recipes</label>
+        <select id="recipeQuickSelect"><option value="">Select a saved recipe…</option></select>
+        <small id="quickRecipeStatus" aria-live="polite">Optional — search or select a recipe to fill in all macro fields below.</small>
+      </div>
       <label>Day<select id="foodDay" required></select></label>
       <label>Meal<select id="foodMeal" required><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snacks</option><option>Shake</option></select></label>
       <label class="full">Food name<input id="foodName" required placeholder="e.g. Chicken salad ranch"></label>
