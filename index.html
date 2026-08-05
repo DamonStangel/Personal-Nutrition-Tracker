@@ -18,8 +18,8 @@
     </a>
 
     <nav aria-label="Main navigation">
-      <button class="nav-item active" type="button"><span>▦</span> Weekly log</button>
-      <button class="nav-item" type="button"><span>◫</span> Food library</button>
+      <button class="nav-item active" data-page="weekly" type="button"><span>▦</span> Weekly log</button>
+      <button class="nav-item" data-page="library" type="button"><span>◫</span> Food library</button>
       <button class="nav-item" type="button"><span>◒</span> Insights</button>
       <button class="nav-item" type="button"><span>⌁</span> Goals</button>
     </nav>
@@ -39,8 +39,8 @@
   <main>
     <header class="topbar">
       <div>
-        <p class="eyebrow">NUTRITION OVERVIEW</p>
-        <h1>Weekly log</h1>
+        <p class="eyebrow" id="pageEyebrow">NUTRITION OVERVIEW</p>
+        <h1 id="pageTitle">Weekly log</h1>
       </div>
       <div class="week-controls">
         <button id="prevWeek" class="icon-button" aria-label="Previous week">←</button>
@@ -50,6 +50,7 @@
       <button id="addFoodTop" class="primary-button"><span>＋</span> Add food</button>
     </header>
 
+    <div id="weeklyPage" class="page-panel">
     <section class="goal-strip" aria-label="Weekly overview">
       <div class="goal-summary">
         <span class="goal-ring" id="goalRing"><strong id="weeklyPercent">0%</strong></span>
@@ -62,6 +63,25 @@
     </section>
 
     <section class="week-grid" id="weekGrid" aria-live="polite"></section>
+    </div>
+
+    <div id="libraryPage" class="page-panel" hidden>
+      <section class="library-hero">
+        <div><p class="eyebrow">YOUR PERSONAL COOKBOOK</p><h2>Meals you already know and love.</h2><p>Recipes imported from your macro calculator, ready to drop into any day.</p></div>
+        <div class="library-stat"><strong id="recipeCount">0</strong><span>recipes</span></div>
+      </section>
+      <section class="library-tools">
+        <label class="search-box"><span>⌕</span><input id="recipeSearch" type="search" placeholder="Search recipes or ingredients…"></label>
+        <div class="filter-group" id="recipeFilters">
+          <button class="filter-chip active" data-filter="all">All</button>
+          <button class="filter-chip" data-filter="breakfast">Breakfast</button>
+          <button class="filter-chip" data-filter="meal">Meals</button>
+          <button class="filter-chip" data-filter="side">Sides</button>
+          <button class="filter-chip" data-filter="high-protein">High protein</button>
+        </div>
+      </section>
+      <section class="recipe-grid" id="recipeGrid" aria-live="polite"></section>
+    </div>
   </main>
 
   <dialog id="foodDialog">
@@ -84,6 +104,24 @@
     </form>
   </dialog>
 
+  <dialog id="recipeDialog" class="wide-dialog">
+    <form id="recipeForm" method="dialog">
+      <div class="dialog-heading">
+        <div><p class="eyebrow" id="recipeDialogEyebrow">RECIPE BREAKDOWN</p><h2 id="recipeDialogTitle">Recipe</h2></div>
+        <button class="close-button" value="cancel" formnovalidate aria-label="Close recipe">×</button>
+      </div>
+      <div id="recipeReadView" class="full"></div>
+      <div id="recipeEditView" class="full" hidden>
+        <div class="recipe-basics"><label>Recipe name<input id="newRecipeName" required placeholder="e.g. High protein chicken pasta"></label><label>Category<select id="newRecipeType"><option value="meal">Meal</option><option value="breakfast">Breakfast</option><option value="side">Side</option></select></label></div>
+        <div class="ingredient-editor-head"><div><strong>Ingredients</strong><small>Enter the package-label macros for the exact quantity used.</small></div><button id="addIngredientRow" type="button" class="ghost-button">＋ Add ingredient</button></div>
+        <div class="ingredient-editor" id="ingredientEditor"></div>
+        <div class="builder-total"><span>Calculated recipe total</span><strong id="builderTotal">0cal · 0p · 0c · 0f · 0s</strong></div>
+      </div>
+      <div class="dialog-actions full" id="recipeDialogActions"></div>
+    </form>
+  </dialog>
+
+  <script src="recipe-details.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

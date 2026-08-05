@@ -1,6 +1,53 @@
 const MEALS = ["Breakfast", "Lunch", "Dinner", "Snacks", "Shake"];
 const GOALS = { calories: 2500, protein: 190, carbs: 275, fat: 70, sugar: 38 };
 let weekOffset = 0;
+let activeRecipeFilter = "all";
+let currentPage = "weekly";
+
+const RECIPES = [
+  ["Breakfast Bagel","breakfast",305,36,34,28,6,["2 oz ham","Tomato slices","Cheese spread","3/4 cup egg whites","Thin bagel"]],
+  ["Protein Oatmeal & Banana","breakfast",410,30.5,60.5,6.5,17,["1/2 cup Quaker oats","Protein powder","1/2 cup almond milk","1 banana"]],
+  ["Egg Bake","breakfast",323.5,20.7,29.3,12.9,1.5,["Eggs","Milk","Fat-free cheese","Spinach","Ham","Hash browns"]],
+  ["Eggs, Hash Browns & Sausage","breakfast",460,36,20,15,0,["3 eggs","85g hash browns","Sausage link"]],
+  ["Egg Cheese Burrito","breakfast",420,33,20,17.5,0,["3 eggs","Tortilla","Colby jack cheese"]],
+  ["Turkey Pepperoni Chicken Pizza","meal",549.3,63,50,8.5,6,["Chicken breast","Breadcrumbs","Parmesan","Pizza sauce","Fat-free mozzarella","Turkey pepperoni"]],
+  ["Taco Bell Sliders","meal",214.5,16,17.5,7.6,5,["King's Hawaiian roll","93/7 beef","Taco seasoning","Fat-free cheddar","Cheese","Quest chips"]],
+  ["Penne Spaghetti","meal",515,46.5,53,14,11,["170g 93/7 beef","Protein penne","Ragu chunky sauce"]],
+  ["Apache Penne Spaghetti","meal",387.5,29.3,53,8,11,["85g 93/7 beef","Protein penne","Ragu chunky sauce"]],
+  ["Damon Penne Spaghetti Soup","meal",480,45.5,44,13.5,6.5,["170g 93/7 beef","Protein penne","Tomato sauce","Chicken broth"]],
+  ["Damon Penne Butter Noodles","meal",540,53.5,40,24,2,["170g 93/7 beef","Protein penne","Fat-free mozzarella","Butter"]],
+  ["Apache Chicken Salad","meal",245,27.5,10.5,10.3,0,["98g chicken breast","Avocado caesar dressing","Spring mix","Colby jack","Croutons"]],
+  ["Damon Chicken Salad","meal",450,48.5,8.5,23.8,1,["196g chicken breast","Ranch","Spring mix","Colby jack","Croutons"]],
+  ["Chicken Alfredo Pizza - Damon","meal",559,69,40,13,2.5,["196g chicken","Cottage cheese","Low-fat mozzarella","Pita bread","Alfredo sauce"]],
+  ["Chicken Alfredo Pizza - Wife","meal",454,48,40,10.5,2.5,["98g chicken","Cottage cheese","Low-fat mozzarella","Pita bread","Alfredo sauce"]],
+  ["Chicken Alfredo Pizza","meal",536,66,40,10,2.5,["170g chicken","Cottage cheese","Low-fat mozzarella","Pita bread","Alfredo sauce"]],
+  ["Damon Meatloaf","meal",425,39.5,32,15,4,["170g 93/7 beef","Ketchup","Quaker oats"]],
+  ["Apache Meatloaf","meal",297.5,22.3,32,9,4,["85g 93/7 beef","Ketchup","Quaker oats"]],
+  ["DAMETIME Burger Gravy","meal",525,47.5,50,13.5,0,["170g 93/7 beef","White rice","Gravy","Egg whites"]],
+  ["Apache Burger Gravy","meal",347.5,20.3,48,7.5,0,["85g 93/7 beef","White rice","Gravy"]],
+  ["Cheeseburger - Keto Bun","meal",440,48.5,27,20,8,["170g 93/7 beef","Pepper jack","Keto bun","Ketchup","Pickles"]],
+  ["Cheeseburger - White Bread","meal",520,44.5,39,20,10,["170g 93/7 beef","Pepper jack","White bread","Ketchup","Pickles"]],
+  ["DAMETIME Taco Salad","meal",685,44.9,38,34,0,["170g 93/7 beef","Taco seasoning","Cheese","Lettuce","Chips"]],
+  ["DAMETIME Chicken Taco Salad","meal",490,50.4,19,21,0,["196g chicken","Taco seasoning","Cheese","Lettuce","Doritos"]],
+  ["DAMETIME Dorito Burger Taco Salad","meal",535,42.9,19,28,0,["170g 93/7 beef","Taco seasoning","Cheese","Lettuce","Doritos"]],
+  ["DAMETIME Mini Tacos","meal",475,48.9,26,24,0,["170g 93/7 beef","Taco seasoning","Cheese","Lettuce","Carb-balance tortillas"]],
+  ["Apache Mini Tacos","meal",347.5,31.7,26,18,0,["85g 93/7 beef","Taco seasoning","Cheese","Lettuce","Carb-balance tortillas"]],
+  ["Egg Drop Chicken Soup","meal",387,56.3,3,9,0,["2 eggs","196g chicken","Carrots","Broth"]],
+  ["Cajun Chicken Noodles","meal",647.5,54.3,34.4,33,1.7,["Protein spaghetti","Chicken","Olive oil","Tomatoes","Heavy cream","Parmesan"]],
+  ["Pizza Bagels - High Protein","meal",495,33,51,16,5,["Protein bagel","Pizza sauce","Mozzarella","Pepperoni"]],
+  ["Pizza Bagels - Current","meal",500,33,51,16,5,["Protein bagel","Roasted pizza sauce","Mozzarella","Pepperoni"]],
+  ["Pizza Bagels - Classic","meal",440,21,54,14.5,7,["Everything bagel","Pizza sauce","Mozzarella","Pepperoni"]],
+  ["Protein McFlurry","meal",383,45.5,32,7,12,["Fairlife skim milk","Vanilla whey","Vanilla extract","Xanthan gum","Oreo Thins"]],
+  ["Grilled Cheese","meal",240,11,22,19,4,["Thin white bread","Butter","Kraft cheese"]],
+  ["Russet Potato Fries","side",201,3.8,32.5,7,0,["Russet potatoes","Olive oil","Seasonings"]],
+  ["Sweet Potato Fries","side",427,6,72,14,15,["Sweet potatoes","Olive oil","Seasonings"]],
+  ["Instant Potatoes","side",150,3.5,19,6.5,0,["Milk","Butter","Potato mix"]],
+  ["Half Can Corn","side",105,1.8,16,1.8,0,["1/2 of a 15 oz can"]],
+  ["BBQ Pack Keto","meal",310,26,30,13.5,12,["BBQ packs","Keto bun"]]
+].map(([name,type,cal,p,c,fat,s,ingredients],id)=>({id,name,type,cal,p,c,fat,s,ingredients,rows:RECIPE_DETAILS[name] || []}));
+
+const savedRecipes = JSON.parse(localStorage.getItem("daily-fuel-custom-recipes") || "[]");
+savedRecipes.forEach((recipe,index) => RECIPES.push({...recipe,id:`custom-${index}`}));
 
 const sample = {
   Monday: {
@@ -70,12 +117,95 @@ function render() {
   document.querySelector("#weeklySubtext").textContent = `${Math.max(target-week.cal,0).toLocaleString(undefined,{maximumFractionDigits:0})} calories remaining`;
   document.querySelector("#avgProtein").textContent = `${tidy(week.p/7)}g`; document.querySelector("#avgCarbs").textContent = `${tidy(week.c/7)}g`; document.querySelector("#avgFats").textContent = `${tidy(week.fat/7)}g`;
 }
+
+function renderLibrary() {
+  const term = document.querySelector("#recipeSearch").value.trim().toLowerCase();
+  const matches = RECIPES.filter(r => {
+    const searchHit = !term || `${r.name} ${r.ingredients.join(" ")}`.toLowerCase().includes(term);
+    const filterHit = activeRecipeFilter === "all" || r.type === activeRecipeFilter || (activeRecipeFilter === "high-protein" && r.p >= 40);
+    return searchHit && filterHit;
+  });
+  document.querySelector("#recipeCount").textContent = RECIPES.length;
+  document.querySelector("#recipeGrid").innerHTML = matches.length ? matches.map(r => `<article class="recipe-card"><div class="recipe-top"><div><span class="recipe-type">${r.type}</span><h3>${r.name}</h3></div><span class="protein-badge">${tidy(r.p)}p</span></div><div class="recipe-macros"><div><strong>${tidy(r.cal)}</strong><small>cal</small></div><div><strong>${tidy(r.c)}g</strong><small>carbs</small></div><div><strong>${tidy(r.fat)}g</strong><small>fat</small></div><div><strong>${tidy(r.s)}g</strong><small>sugar</small></div></div><p class="ingredient-preview">${r.ingredients.slice(0,3).join(" · ")}${r.ingredients.length>3?" · +more":""}</p><div class="recipe-actions"><button class="recipe-details" data-details="${r.id}">View ingredients</button><button class="add-recipe" data-recipe="${r.id}">＋ Add to log</button></div></article>`).join("") : `<div class="empty-library"><h3>No recipes found</h3><p>Try another search or filter.</p></div>`;
+}
+
+function recipeTable(recipe) {
+  return `<div class="recipe-sheet"><div class="sheet-header"><span>Ingredient</span><span>Quantity per serving</span><span>Calories</span><span>Protein</span><span>Carbs</span><span>Fats</span><span>Sugars</span></div>${recipe.rows.map(row=>`<div class="sheet-row"><strong>${escapeHtml(row[0])}</strong><span>${escapeHtml(row[1])}</span><span>${tidy(row[2])}</span><span>${tidy(row[3])}</span><span>${tidy(row[4])}</span><span>${tidy(row[5])}</span><span>${tidy(row[6])}</span></div>`).join("")}<div class="sheet-total"><span>Recipe total</span><strong>${macroText(recipe)}</strong></div></div>`;
+}
+
+function openRecipeDetails(recipe) {
+  document.querySelector("#recipeDialogEyebrow").textContent = "RECIPE BREAKDOWN";
+  document.querySelector("#recipeDialogTitle").textContent = recipe.name;
+  document.querySelector("#recipeReadView").hidden = false; document.querySelector("#recipeEditView").hidden = true;
+  document.querySelector("#recipeReadView").innerHTML = recipeTable(recipe);
+  document.querySelector("#recipeDialogActions").innerHTML = `<button value="cancel" class="ghost-button" formnovalidate>Close</button><button type="button" class="primary-button" id="logRecipeFromDetail">Add recipe to log</button>`;
+  document.querySelector("#logRecipeFromDetail").addEventListener("click",()=>{ document.querySelector("#recipeDialog").close(); prefillRecipe(recipe); });
+  document.querySelector("#recipeDialog").showModal();
+}
+
+function ingredientRow(values=["","",0,0,0,0,0]) {
+  const row=document.createElement("div"); row.className="ingredient-edit-row";
+  row.innerHTML=`<input class="ing-name" required placeholder="Ingredient" value="${escapeHtml(values[0])}"><input class="ing-qty" required placeholder="Qty / serving" value="${escapeHtml(values[1])}">${["cal","p","c","f","s"].map((k,i)=>`<input class="ing-${k}" type="number" min="0" step="0.1" required aria-label="${k}" placeholder="${k}" value="${values[i+2]||""}">`).join("")}<button type="button" class="remove-ingredient" aria-label="Remove ingredient">×</button>`;
+  row.querySelectorAll("input").forEach(input=>input.addEventListener("input",updateBuilderTotal));
+  row.querySelector(".remove-ingredient").addEventListener("click",()=>{row.remove();updateBuilderTotal();});
+  document.querySelector("#ingredientEditor").append(row);
+}
+
+function editorRows() {
+  return [...document.querySelectorAll(".ingredient-edit-row")].map(row=>[row.querySelector(".ing-name").value.trim(),row.querySelector(".ing-qty").value.trim(),...['cal','p','c','f','s'].map(k=>Number(row.querySelector(`.ing-${k}`).value)||0)]);
+}
+function calculatedRecipeTotal(rows=editorRows()) { return sumFoods(rows.map(r=>[r[0],r[2],r[3],r[4],r[5],r[6]])); }
+function updateBuilderTotal() { document.querySelector("#builderTotal").textContent=macroText(calculatedRecipeTotal()); }
+
+function openRecipeBuilder() {
+  document.querySelector("#recipeDialogEyebrow").textContent="RECIPE CALCULATOR"; document.querySelector("#recipeDialogTitle").textContent="Create a recipe";
+  document.querySelector("#recipeReadView").hidden=true; document.querySelector("#recipeEditView").hidden=false;
+  document.querySelector("#newRecipeName").value=""; document.querySelector("#newRecipeType").value="meal"; document.querySelector("#ingredientEditor").innerHTML=`<div class="ingredient-editor-columns"><span>Ingredient</span><span>Quantity / serving</span><span>Calories</span><span>Protein</span><span>Carbs</span><span>Fats</span><span>Sugars</span><span></span></div>`;
+  ingredientRow(); ingredientRow(); updateBuilderTotal();
+  document.querySelector("#recipeDialogActions").innerHTML=`<button value="cancel" class="ghost-button" formnovalidate>Cancel</button><button type="button" class="primary-button" id="saveRecipe">Save recipe</button>`;
+  document.querySelector("#saveRecipe").addEventListener("click",saveCustomRecipe);
+  document.querySelector("#recipeDialog").showModal();
+}
+
+function saveCustomRecipe() {
+  const name=document.querySelector("#newRecipeName").value.trim(), rows=editorRows();
+  if(!name || !rows.length || rows.some(r=>!r[0]||!r[1])) { alert("Give the recipe a name and complete every ingredient and quantity."); return; }
+  const total=calculatedRecipeTotal(rows), stored=JSON.parse(localStorage.getItem("daily-fuel-custom-recipes")||"[]");
+  const recipe={name,type:document.querySelector("#newRecipeType").value,...total,ingredients:rows.map(r=>r[0]),rows}; stored.push(recipe); localStorage.setItem("daily-fuel-custom-recipes",JSON.stringify(stored));
+  RECIPES.push({...recipe,id:`custom-${stored.length-1}`}); document.querySelector("#recipeDialog").close(); renderLibrary();
+}
+
+function prefillRecipe(recipe) {
+  openFood("Monday", recipe.type === "breakfast" ? "Breakfast" : recipe.type === "side" ? "Dinner" : "Lunch");
+  document.querySelector("#foodName").value=recipe.name; [["Calories",recipe.cal],["Protein",recipe.p],["Carbs",recipe.c],["Fat",recipe.fat],["Sugar",recipe.s]].forEach(([k,v])=>document.querySelector(`#food${k}`).value=v);
+}
+
+function switchPage(page) {
+  currentPage = page;
+  const library = page === "library";
+  document.querySelector("#weeklyPage").hidden = library; document.querySelector("#libraryPage").hidden = !library;
+  document.querySelector(".week-controls").hidden = library;
+  document.querySelector("#pageEyebrow").textContent = library ? "RECIPES & SAVED FOODS" : "NUTRITION OVERVIEW";
+  document.querySelector("#pageTitle").textContent = library ? "Food library" : "Weekly log";
+  document.querySelector("#addFoodTop").innerHTML = library ? "＋ New recipe" : "<span>＋</span> Add food";
+  document.querySelectorAll(".nav-item[data-page]").forEach(b => b.classList.toggle("active", b.dataset.page === page));
+  if (library) renderLibrary();
+}
 function escapeHtml(value) { const d=document.createElement("div"); d.textContent=value; return d.innerHTML; }
 function openFood(day="Monday", meal="Breakfast") { document.querySelector("#foodDay").value=day; document.querySelector("#foodMeal").value=meal; document.querySelector("#foodDialog").showModal(); setTimeout(()=>document.querySelector("#foodName").focus(),50); }
 
 const daySelect = document.querySelector("#foodDay"); ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"].forEach(d => daySelect.add(new Option(d,d)));
 document.querySelector("#weekGrid").addEventListener("click", e => { const b=e.target.closest("button[data-day]"); if(b) openFood(b.dataset.day,b.dataset.meal); });
-document.querySelector("#addFoodTop").addEventListener("click",()=>openFood());
+document.querySelector("#addFoodTop").addEventListener("click",()=> currentPage === "library" ? openRecipeBuilder() : openFood());
+document.querySelector("#addIngredientRow").addEventListener("click",()=>ingredientRow());
+document.querySelectorAll(".nav-item[data-page]").forEach(b => b.addEventListener("click",()=>switchPage(b.dataset.page)));
+document.querySelector("#recipeSearch").addEventListener("input",renderLibrary);
+document.querySelector("#recipeFilters").addEventListener("click",e=>{ const b=e.target.closest("[data-filter]"); if(!b)return; activeRecipeFilter=b.dataset.filter; document.querySelectorAll(".filter-chip").forEach(x=>x.classList.toggle("active",x===b)); renderLibrary(); });
+document.querySelector("#recipeGrid").addEventListener("click",e=>{
+  const add=e.target.closest("[data-recipe]"), details=e.target.closest("[data-details]");
+  if(add){ const r=RECIPES.find(x=>String(x.id)===add.dataset.recipe); prefillRecipe(r); }
+  if(details){ const r=RECIPES.find(x=>String(x.id)===details.dataset.details); openRecipeDetails(r); }
+});
 document.querySelector("#foodForm").addEventListener("submit", e => {
   if (e.submitter?.value === "cancel") return;
   e.preventDefault(); const data=loadWeek(), day=daySelect.value, meal=document.querySelector("#foodMeal").value;
