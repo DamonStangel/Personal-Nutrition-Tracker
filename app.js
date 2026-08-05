@@ -116,7 +116,7 @@ function render() {
     const populatedMeals=MEALS.filter(meal=>(meals[meal]||[]).length>0).length; if(populatedMeals>1){ averageDays++; Object.keys(averageTotals).forEach(k=>averageTotals[k]+=total[k]); }
     const isToday = date.toDateString() === new Date().toDateString();
     const card = document.createElement("article"); card.className = `day-card${isToday ? " today" : ""}`;
-    card.innerHTML = `<header class="day-header"><div class="day-title"><h3>${day}</h3><div class="day-header-actions"><span>${formatDate(date,{month:"short",day:"numeric"})}</span><button class="clear-day" data-clear-day="${day}" aria-label="Clear ${day}" title="Clear ${day}">⌫</button></div></div><div class="day-total">${tidy(total.cal).toLocaleString()} cal<small>${tidy(total.p)}p · ${tidy(total.c)}c · ${tidy(total.fat)}f · ${tidy(total.s)}s</small></div><div class="progress"><span style="width:${Math.min(total.cal/GOALS.calories*100,100)}%"></span></div></header>`;
+    card.innerHTML = `<header class="day-header"><div class="day-title"><button class="day-title-button" data-open-day="${day}" aria-label="Open ${day} breakdown">${day}<span>↗</span></button><div class="day-header-actions"><span>${formatDate(date,{month:"short",day:"numeric"})}</span><button class="clear-day" data-clear-day="${day}" aria-label="Clear ${day}" title="Clear ${day}">⌫</button></div></div><div class="day-total">${tidy(total.cal).toLocaleString()} cal<small>${tidy(total.p)}p · ${tidy(total.c)}c · ${tidy(total.fat)}f · ${tidy(total.s)}s</small></div><div class="progress"><span style="width:${Math.min(total.cal/GOALS.calories*100,100)}%"></span></div></header>`;
     MEALS.forEach(meal => {
       const foods = meals[meal] || [], mt = sumFoods(foods), section = document.createElement("section"); section.className = "meal"; section.dataset.meal=meal.toLowerCase();
       section.innerHTML = `<div class="meal-heading"><strong>${meal}</strong><button data-day="${day}" data-meal="${meal}" aria-label="Add to ${meal}">+</button></div>${foods.length ? foods.map((f,index) => { const quantity=f[6]||1; return `<div class="food"><div class="food-name">${escapeHtml(f[0])}${quantity>1?`<span class="food-quantity">×${quantity}</span>`:""}</div><div class="food-macros">${macroText({cal:f[1]*quantity,p:f[2]*quantity,c:f[3]*quantity,fat:f[4]*quantity,s:f[5]*quantity})}</div><div class="food-actions"><button class="edit-food" data-action="edit" data-day="${day}" data-meal="${meal}" data-index="${index}" aria-label="Edit ${escapeHtml(f[0])}">✎</button><button class="delete-food" data-action="delete" data-day="${day}" data-meal="${meal}" data-index="${index}" aria-label="Delete ${escapeHtml(f[0])}">×</button></div></div>`; }).join("") + `<div class="meal-total">Total: ${macroText(mt)}</div>` : `<div class="empty-meal">Nothing logged</div>`}`;
@@ -230,8 +230,20 @@ function renderInsights() {
   document.querySelector("#insightNotes").innerHTML=notes.map(([n,title,text])=>`<div class="insight-note"><span>${n}</span><div><strong>${title}</strong><p>${text}</p></div></div>`).join("");
 }
 
+function openDayDetail(day) {
+  const data=loadWeek(), meals=data[day], days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"], index=days.indexOf(day), date=getSunday(); date.setDate(date.getDate()+index); const total=dayTotal(meals);
+  document.querySelector("#dayDetailTitle").textContent=day; document.querySelector("#dayDetailDate").textContent=formatDate(date,{weekday:"long",month:"long",day:"numeric",year:"numeric"});
+  const caloriePercent=Math.round(total.cal/GOALS.calories*100), proteinPercent=Math.round(total.p/GOALS.protein*100);
+  document.querySelector("#dayDetailSummary").innerHTML=`<div><small>DAY TOTAL</small><strong>${macroText(total)}</strong></div><div class="day-goal-meter"><span><b>Calories</b>${tidy(total.cal)} / ${tidy(GOALS.calories)}</span><div><i style="width:${Math.min(caloriePercent,100)}%"></i></div></div><div class="day-goal-meter protein"><span><b>Protein</b>${tidy(total.p)}g / ${tidy(GOALS.protein)}g</span><div><i style="width:${Math.min(proteinPercent,100)}%"></i></div></div>`;
+  const order=["Breakfast","Snacks","Lunch","Shake","Dinner"];
+  document.querySelector("#dayDetailMeals").innerHTML=order.map(meal=>{ const foods=meals[meal]||[], total=sumFoods(foods); return `<section class="day-detail-meal" data-meal="${meal.toLowerCase()}"><div class="day-detail-meal-head"><strong>${meal}</strong><span>${foods.length} item${foods.length===1?"":"s"}</span></div><div class="day-detail-foods">${foods.length?foods.map(food=>{const quantity=food[6]||1; return `<div class="day-detail-food"><strong>${escapeHtml(food[0])}${quantity>1?` <em>×${quantity}</em>`:""}</strong><span>${macroText({cal:food[1]*quantity,p:food[2]*quantity,c:food[3]*quantity,fat:food[4]*quantity,s:food[5]*quantity})}</span></div>`;}).join(""):`<p>Nothing logged</p>`}</div><div class="day-detail-meal-total"><span>Meal total</span><strong>${macroText(total)}</strong></div></section>`;}).join("");
+  document.querySelector("#dayDetailDialog").showModal();
+}
+
 function switchPage(page) {
+  if(!["weekly","library","insights","goals"].includes(page)) page="weekly";
   currentPage = page;
+  localStorage.setItem("daily-fuel-current-page",page); if(location.hash!==`#${page}`) history.replaceState(null,"",`#${page}`);
   const library = page === "library";
   const goals = page === "goals";
   const insights = page === "insights";
@@ -267,12 +279,14 @@ function openFood(day="Monday", meal="Breakfast", food=null, index=null) {
 
 const daySelect = document.querySelector("#foodDay"); ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"].forEach(d => daySelect.add(new Option(d,d)));
 document.querySelector("#weekGrid").addEventListener("click", async e => {
+  const openDay=e.target.closest("button[data-open-day]"); if(openDay){ openDayDetail(openDay.dataset.openDay); return; }
   const clearDay=e.target.closest("button[data-clear-day]");
   if(clearDay){ const day=clearDay.dataset.clearDay; if(await showAppModal({title:`Clear ${day}?`,message:`Every breakfast, lunch, dinner, snack, and shake entry from ${day} will be removed. This cannot be undone.`,confirmText:"Clear day",cancelText:"Keep entries",tone:"danger"})){ const data=loadWeek(); data[day]=Object.fromEntries(MEALS.map(meal=>[meal,[]])); saveWeek(data); render(); } return; }
   const action=e.target.closest("button[data-action]");
   if(action){ const data=loadWeek(), {day,meal}=action.dataset, index=Number(action.dataset.index); if(action.dataset.action==="delete"){ data[day][meal].splice(index,1); saveWeek(data); render(); } else openFood(day,meal,data[day][meal][index],index); return; }
   const b=e.target.closest("button[data-day]"); if(b) openFood(b.dataset.day,b.dataset.meal);
 });
+document.querySelector("#closeDayDetail").addEventListener("click",()=>document.querySelector("#dayDetailDialog").close());
 document.querySelector("#addFoodTop").addEventListener("click",()=> currentPage === "library" ? openRecipeBuilder() : openFood());
 document.querySelector("#addIngredientRow").addEventListener("click",()=>ingredientRow());
 document.querySelectorAll(".nav-item[data-page]").forEach(b => b.addEventListener("click",()=>switchPage(b.dataset.page)));
@@ -312,3 +326,5 @@ document.querySelector("#increaseQuantity").addEventListener("click",()=>{ const
 document.querySelector("#foodQuantity").addEventListener("input",updateQuantityHint);
 ["Calories","Protein","Carbs","Fat","Sugar"].forEach(k=>document.querySelector(`#food${k}`).addEventListener("input",updateQuantityHint));
 render();
+const requestedPage=location.hash.slice(1)||localStorage.getItem("daily-fuel-current-page")||"weekly";
+switchPage(requestedPage);
