@@ -20,7 +20,7 @@
     <nav aria-label="Main navigation">
       <button class="nav-item active" data-page="weekly" type="button"><span>▦</span> Weekly log</button>
       <button class="nav-item" data-page="library" type="button"><span>◫</span> Food library</button>
-      <button class="nav-item" type="button"><span>◒</span> Insights</button>
+      <button class="nav-item" data-page="insights" type="button"><span>◒</span> Insights</button>
       <button class="nav-item" data-page="goals" type="button"><span>⌁</span> Goals</button>
     </nav>
 
@@ -111,6 +111,17 @@
           <div id="weightChart" class="weight-chart"></div>
           <div id="weightHistory" class="weight-history"></div>
         </section>
+      </section>
+    </div>
+
+    <div id="insightsPage" class="page-panel" hidden>
+      <section class="insights-wrap">
+        <div class="insight-intro"><div><p class="eyebrow">WEEKLY REVIEW</p><h2>Turn your log into decisions.</h2><p id="insightWeekLabel">A clear look at consistency, targets, and daily patterns.</p></div><span class="insight-mark">↗</span></div>
+        <div class="insight-stats" id="insightStats"></div>
+        <div class="insight-layout">
+          <section class="insight-panel"><div class="section-heading"><div><p class="eyebrow">DAY BY DAY</p><h2>Calories and protein</h2><p>Compare each logged day with your current goals.</p></div></div><div id="dailyInsightChart" class="daily-insight-chart"></div></section>
+          <section class="insight-panel"><div class="section-heading"><div><p class="eyebrow">COACHING NOTES</p><h2>This week at a glance</h2><p>Observations generated from what you logged.</p></div></div><div id="insightNotes" class="insight-notes"></div></section>
+        </div>
       </section>
     </div>
   </main>

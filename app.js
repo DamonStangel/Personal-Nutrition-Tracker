@@ -212,19 +212,39 @@ function renderGoals() {
   history.innerHTML=[...weights].reverse().map(w=>`<div class="weight-row"><span>Week of ${formatDate(new Date(`${w.date}T12:00:00`),{month:"short",day:"numeric",year:"numeric"})}</span><strong>${tidy(w.weight)} lb</strong><button data-remove-weight="${w.date}" aria-label="Remove weight from ${w.date}">×</button></div>`).join("");
 }
 
+function renderInsights() {
+  const data=loadWeek(), days=Object.entries(data).map(([name,meals])=>({name,meals,total:dayTotal(meals),mealCount:MEALS.filter(meal=>(meals[meal]||[]).length).length}));
+  const logged=days.filter(d=>d.total.cal>0), complete=days.filter(d=>d.mealCount>1), caloriesHit=logged.filter(d=>Math.abs(d.total.cal-GOALS.calories)<=GOALS.calories*.1).length, proteinHit=logged.filter(d=>d.total.p>=GOALS.protein).length;
+  const averageCalories=logged.length?logged.reduce((sum,d)=>sum+d.total.cal,0)/logged.length:0, averageProtein=complete.length?complete.reduce((sum,d)=>sum+d.total.p,0)/complete.length:0;
+  const sunday=getSunday(), saturday=new Date(sunday); saturday.setDate(sunday.getDate()+6); document.querySelector("#insightWeekLabel").textContent=`${formatDate(sunday,{month:"long",day:"numeric"})}–${formatDate(saturday,{month:"long",day:"numeric",year:"numeric"})} · based on your saved entries`;
+  document.querySelector("#insightStats").innerHTML=`<div class="insight-stat"><small>DAYS LOGGED</small><strong>${logged.length}/7</strong><p>${complete.length} qualify for macro averages</p></div><div class="insight-stat"><small>AVG CALORIES</small><strong>${tidy(averageCalories).toLocaleString()}</strong><p>Goal ${tidy(GOALS.calories).toLocaleString()} per day</p></div><div class="insight-stat"><small>AVG PROTEIN</small><strong>${tidy(averageProtein)}g</strong><p>Across complete days</p></div><div class="insight-stat"><small>GOAL DAYS</small><strong>${caloriesHit}</strong><p>Within 10% of calorie target</p></div>`;
+  document.querySelector("#dailyInsightChart").innerHTML=days.map(d=>`<div class="insight-day"><strong>${d.name.slice(0,3)}</strong><div class="dual-bars"><div class="insight-bar"><i style="width:${Math.min(d.total.cal/GOALS.calories*100,100)}%"></i></div><div class="insight-bar protein"><i style="width:${Math.min(d.total.p/GOALS.protein*100,100)}%"></i></div></div><span>${tidy(d.total.cal)} cal</span></div>`).join("")+`<div class="insight-legend"><span><i></i>Calories vs goal</span><span><i></i>Protein vs goal</span></div>`;
+  const notes=[];
+  if(!logged.length) notes.push(["1","Start with consistency","Log at least two meal sections in a day to include it in macro averages."]);
+  else {
+    const calorieDiff=tidy(averageCalories-GOALS.calories); notes.push(["1","Calorie pace",`${Math.abs(calorieDiff).toLocaleString()} calories ${calorieDiff>0?"above":"below"} your daily target on average.`]);
+    notes.push(["2","Protein consistency",`${proteinHit} of ${logged.length} logged days reached your ${tidy(GOALS.protein)}g protein goal.`]);
+    notes.push(["3","Logging quality",`${complete.length} day${complete.length===1?"":"s"} had more than one meal section and counted toward macro averages.`]);
+    const highest=[...logged].sort((a,b)=>b.total.cal-a.total.cal)[0]; notes.push(["4","Highest intake day",`${highest.name} was highest at ${tidy(highest.total.cal).toLocaleString()} calories.`]);
+  }
+  document.querySelector("#insightNotes").innerHTML=notes.map(([n,title,text])=>`<div class="insight-note"><span>${n}</span><div><strong>${title}</strong><p>${text}</p></div></div>`).join("");
+}
+
 function switchPage(page) {
   currentPage = page;
   const library = page === "library";
   const goals = page === "goals";
-  document.querySelector("#weeklyPage").hidden = page!=="weekly"; document.querySelector("#libraryPage").hidden = !library; document.querySelector("#goalsPage").hidden=!goals;
+  const insights = page === "insights";
+  document.querySelector("#weeklyPage").hidden = page!=="weekly"; document.querySelector("#libraryPage").hidden = !library; document.querySelector("#goalsPage").hidden=!goals; document.querySelector("#insightsPage").hidden=!insights;
   document.querySelector(".week-controls").hidden = page!=="weekly";
-  document.querySelector("#clearWeek").hidden = page!=="weekly"; document.querySelector("#addFoodTop").hidden=goals;
-  document.querySelector("#pageEyebrow").textContent = library ? "RECIPES & SAVED FOODS" : goals ? "TARGETS & PROGRESS" : "NUTRITION OVERVIEW";
-  document.querySelector("#pageTitle").textContent = library ? "Food library" : goals ? "Goals" : "Weekly log";
+  document.querySelector("#clearWeek").hidden = page!=="weekly"; document.querySelector("#addFoodTop").hidden=goals||insights;
+  document.querySelector("#pageEyebrow").textContent = library ? "RECIPES & SAVED FOODS" : goals ? "TARGETS & PROGRESS" : insights ? "PATTERNS & CONSISTENCY" : "NUTRITION OVERVIEW";
+  document.querySelector("#pageTitle").textContent = library ? "Food library" : goals ? "Goals" : insights ? "Insights" : "Weekly log";
   document.querySelector("#addFoodTop").innerHTML = library ? "＋ New recipe" : "<span>＋</span> Add food";
   document.querySelectorAll(".nav-item[data-page]").forEach(b => b.classList.toggle("active", b.dataset.page === page));
   if (library) renderLibrary();
   if (goals) renderGoals();
+  if (insights) renderInsights();
 }
 function escapeHtml(value) { const d=document.createElement("div"); d.textContent=value; return d.innerHTML; }
 function showAppModal({title,message,confirmText="Okay",cancelText="",tone="info"}) {
