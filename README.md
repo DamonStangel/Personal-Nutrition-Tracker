@@ -6,7 +6,7 @@ Open `index.html` in a browser to use it. Food entries are saved locally in the 
 
 The repository contains only a small generic starter library and example day. Personal recipes and tracking history belong in private backup files, not in source control.
 
-STEPS TO USE APP
+**STEPS TO USE APP**
 
 1. Clone repo or download folder as zip using the green code dropdown button.
 2. Extract files into a file location - preferably not in the downloads folder.
