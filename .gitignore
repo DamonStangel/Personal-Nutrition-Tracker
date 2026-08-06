@@ -1,0 +1,3 @@
+# Daily Fuel private exports and local-only data
+daily-fuel-private-backup-*.json
+private-data/

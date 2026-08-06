@@ -1,5 +1,5 @@
 const MEALS = ["Breakfast", "Lunch", "Dinner", "Snacks", "Shake"];
-const DEFAULT_GOALS = { calories: 2500, protein: 190, carbs: 275, fat: 70, sugar: 38 };
+const DEFAULT_GOALS = { calories: 2000, protein: 150, carbs: 225, fat: 65, sugar: 40 };
 let GOALS = {...DEFAULT_GOALS,...JSON.parse(localStorage.getItem("daily-fuel-goals") || "{}")};
 let weekOffset = 0;
 let activeRecipeFilter = "all";
@@ -10,73 +10,27 @@ let editingRecipeId = null;
 let activeDayDetail = null;
 
 const RECIPES = [
-  ["Breakfast Bagel","breakfast",305,36,34,28,6,["2 oz ham","Tomato slices","Cheese spread","3/4 cup egg whites","Thin bagel"]],
-  ["Protein Oatmeal & Banana","breakfast",410,30.5,60.5,6.5,17,["1/2 cup Quaker oats","Protein powder","1/2 cup almond milk","1 banana"]],
-  ["Egg Bake","breakfast",323.5,20.7,29.3,12.9,1.5,["Eggs","Milk","Fat-free cheese","Spinach","Ham","Hash browns"]],
-  ["Eggs, Hash Browns & Sausage","breakfast",460,36,20,15,0,["3 eggs","85g hash browns","Sausage link"]],
-  ["Egg Cheese Burrito","breakfast",420,33,20,17.5,0,["3 eggs","Tortilla","Colby jack cheese"]],
-  ["Turkey Pepperoni Chicken Pizza","meal",549.3,63,50,8.5,6,["Chicken breast","Breadcrumbs","Parmesan","Pizza sauce","Fat-free mozzarella","Turkey pepperoni"]],
-  ["Taco Bell Sliders","meal",214.5,16,17.5,7.6,5,["King's Hawaiian roll","93/7 beef","Taco seasoning","Fat-free cheddar","Cheese","Quest chips"]],
-  ["Penne Spaghetti","meal",515,46.5,53,14,11,["170g 93/7 beef","Protein penne","Ragu chunky sauce"]],
-  ["Wifey Penne Spaghetti","meal",387.5,29.3,53,8,11,["85g 93/7 beef","Protein penne","Ragu chunky sauce"]],
-  ["Damon Penne Spaghetti Soup","meal",480,45.5,44,13.5,6.5,["170g 93/7 beef","Protein penne","Tomato sauce","Chicken broth"]],
-  ["Damon Penne Butter Noodles","meal",540,53.5,40,24,2,["170g 93/7 beef","Protein penne","Fat-free mozzarella","Butter"]],
-  ["Wifey Chicken Salad","meal",245,27.5,10.5,10.3,0,["98g chicken breast","Avocado caesar dressing","Spring mix","Colby jack","Croutons"]],
-  ["Damon Chicken Salad","meal",450,48.5,8.5,23.8,1,["196g chicken breast","Ranch","Spring mix","Colby jack","Croutons"]],
-  ["Chicken Alfredo Pizza - Damon","meal",559,69,40,13,2.5,["196g chicken","Cottage cheese","Low-fat mozzarella","Pita bread","Alfredo sauce"]],
-  ["Chicken Alfredo Pizza - Wife","meal",454,48,40,10.5,2.5,["98g chicken","Cottage cheese","Low-fat mozzarella","Pita bread","Alfredo sauce"]],
-  ["Chicken Alfredo Pizza","meal",536,66,40,10,2.5,["170g chicken","Cottage cheese","Low-fat mozzarella","Pita bread","Alfredo sauce"]],
-  ["Damon Meatloaf","meal",425,39.5,32,15,4,["170g 93/7 beef","Ketchup","Quaker oats"]],
-  ["Wifey Meatloaf","meal",297.5,22.3,32,9,4,["85g 93/7 beef","Ketchup","Quaker oats"]],
-  ["Damon Burger Gravy","meal",525,47.5,50,13.5,0,["170g 93/7 beef","White rice","Gravy","Egg whites"]],
-  ["Wifey Burger Gravy","meal",347.5,20.3,48,7.5,0,["85g 93/7 beef","White rice","Gravy"]],
-  ["Cheeseburger - Keto Bun","meal",440,48.5,27,20,8,["170g 93/7 beef","Pepper jack","Keto bun","Ketchup","Pickles"]],
-  ["Cheeseburger - White Bread","meal",520,44.5,39,20,10,["170g 93/7 beef","Pepper jack","White bread","Ketchup","Pickles"]],
-  ["Damon Taco Salad","meal",685,44.9,38,34,0,["170g 93/7 beef","Taco seasoning","Cheese","Lettuce","Chips"]],
-  ["Damon Chicken Taco Salad","meal",490,50.4,19,21,0,["196g chicken","Taco seasoning","Cheese","Lettuce","Doritos"]],
-  ["Damon Dorito Burger Taco Salad","meal",535,42.9,19,28,0,["170g 93/7 beef","Taco seasoning","Cheese","Lettuce","Doritos"]],
-  ["Damon Mini Tacos","meal",475,48.9,26,24,0,["170g 93/7 beef","Taco seasoning","Cheese","Lettuce","Carb-balance tortillas"]],
-  ["Wifey Mini Tacos","meal",347.5,31.7,26,18,0,["85g 93/7 beef","Taco seasoning","Cheese","Lettuce","Carb-balance tortillas"]],
-  ["Egg Drop Chicken Soup","meal",387,56.3,3,9,0,["2 eggs","196g chicken","Carrots","Broth"]],
-  ["Cajun Chicken Noodles","meal",647.5,54.3,34.4,33,1.7,["Protein spaghetti","Chicken","Olive oil","Tomatoes","Heavy cream","Parmesan"]],
-  ["Pizza Bagels - High Protein","meal",495,33,51,16,5,["Protein bagel","Pizza sauce","Mozzarella","Pepperoni"]],
-  ["Pizza Bagels - Current","meal",500,33,51,16,5,["Protein bagel","Roasted pizza sauce","Mozzarella","Pepperoni"]],
-  ["Pizza Bagels - Classic","meal",440,21,54,14.5,7,["Everything bagel","Pizza sauce","Mozzarella","Pepperoni"]],
-  ["Protein McFlurry","meal",383,45.5,32,7,12,["Fairlife skim milk","Vanilla whey","Vanilla extract","Xanthan gum","Oreo Thins"]],
-  ["Grilled Cheese","meal",240,11,22,19,4,["Thin white bread","Butter","Kraft cheese"]],
-  ["Russet Potato Fries","side",201,3.8,32.5,7,0,["Russet potatoes","Olive oil","Seasonings"]],
-  ["Sweet Potato Fries","side",427,6,72,14,15,["Sweet potatoes","Olive oil","Seasonings"]],
-  ["Instant Potatoes","side",150,3.5,19,6.5,0,["Milk","Butter","Potato mix"]],
-  ["Half Can Corn","side",105,1.8,16,1.8,0,["1/2 of a 15 oz can"]],
-  ["BBQ Pack Keto","meal",310,26,30,13.5,12,["BBQ packs","Keto bun"]]
+  ["Example Protein Oatmeal","breakfast",390,31,52,8,10,["Rolled oats","Protein powder","Milk","Berries"]],
+  ["Example Chicken Rice Bowl","meal",520,48,58,12,6,["Chicken breast","Rice","Mixed vegetables","Sauce"]],
+  ["Example Turkey Wrap","meal",410,36,39,12,5,["Turkey breast","Whole-wheat wrap","Cheese","Lettuce"]],
+  ["Example Roasted Potatoes","side",210,4,35,7,2,["Potatoes","Olive oil","Seasoning"]],
+  ["Example Yogurt Snack","side",190,20,22,3,12,["Greek yogurt","Berries","Honey"]]
 ].map(([name,type,cal,p,c,fat,s,ingredients],id)=>({id,name,type,cal,p,c,fat,s,ingredients,rows:RECIPE_DETAILS[name] || []}));
 
+const importedRecipes = JSON.parse(localStorage.getItem("daily-fuel-imported-recipes") || "[]");
+importedRecipes.forEach((recipe,index)=>{ if(!RECIPES.some(existing=>existing.name.toLowerCase()===String(recipe.name).toLowerCase())) RECIPES.push({...recipe,id:`imported-${index}`}); });
 const savedRecipes = JSON.parse(localStorage.getItem("daily-fuel-custom-recipes") || "[]");
-savedRecipes.forEach((recipe,index) => RECIPES.push({...recipe,id:`custom-${index}`}));
+savedRecipes.forEach((recipe,index) => { if(!RECIPES.some(existing=>existing.name.toLowerCase()===String(recipe.name).toLowerCase())) RECIPES.push({...recipe,id:`custom-${index}`}); });
 const recipeOverrides = JSON.parse(localStorage.getItem("daily-fuel-recipe-overrides") || "{}");
 RECIPES.forEach(recipe=>{ if(recipeOverrides[String(recipe.id)]) Object.assign(recipe,recipeOverrides[String(recipe.id)]); });
 
 const sample = {
   Monday: {
-    Breakfast: [["3 eggs",240,21,0,6,0],["White bread toast ×2",280,10,52,3,2],["Banana",105,1,27,0,0]],
-    Lunch: [["Chicken salad ranch",450,48.5,8.5,23.75,1],["Baked Lays",110,2,19,3,2]],
-    Dinner: [["Taco Bell sliders ×3",643.5,48,52.5,22.8,15],["Half 15oz corn",105,1.75,16,1.75,0]],
-    Snacks: [["Pizza chips — BBQ",140,19,5,5,0]],
-    Shake: [["1 cup milk",130,8,13,5,0],["GNC chocolate protein",120,25,3,1,1],["Creatine gummy 4.5g",33,0,8,0,3.3]]
-  },
-  Tuesday: {
-    Breakfast: [["Protein oatmeal & banana",410,30.5,60.5,6.5,2]],
-    Lunch: [["Tyson chicken breast",190,47,0,5.25,0],["Jasmine rice",150,3,35,0,0],["Teriyaki sauce",70,1,16,0,14]],
-    Dinner: [["Burger gravy with egg whites",525,47.5,50,13.5,0],["Sun Chips original",140,2,19,6,2]],
-    Snacks: [["Oikos protein yogurt",120,23,5,1.5,0],["Sun Chips original",140,2,19,6,2]],
-    Shake: [["1 cup milk",130,8,13,5,0],["GNC chocolate protein",120,25,3,1,1],["Creatine gummy 4.5g",33,0,8,0,3.3]]
-  },
-  Wednesday: {
-    Breakfast: [["Protein oatmeal & banana",410,30.5,60.5,6.5,2]],
-    Lunch: [["Chicken salad ranch",450,48.5,8.5,23.75,1],["Baked Lays",110,2,19,3,2]],
-    Dinner: [["Taco Bell sliders ×3",643.5,48,52.5,22.8,15],["Half 15oz corn",105,1.75,16,1.75,0]],
-    Snacks: [["Oikos protein yogurt",120,23,5,1.5,0],["Baked Cheetos",120,2,18,4,1]],
-    Shake: [["1 cup milk",130,8,13,5,0],["GNC chocolate protein",120,25,3,1,1],["Creatine gummy 4.5g",33,0,8,0,3.3]]
+    Breakfast: [["Example Protein Oatmeal",390,31,52,8,10,1,"1 bowl"]],
+    Lunch: [["Example Chicken Rice Bowl",520,48,58,12,6,1,"1 bowl"]],
+    Dinner: [],
+    Snacks: [["Example Yogurt Snack",190,20,22,3,12,1,"1 serving"]],
+    Shake: []
   }
 };
 
@@ -279,6 +233,25 @@ function showAppModal({title,message,confirmText="Okay",cancelText="",tone="info
     dialog.showModal();
   });
 }
+function backupStorageSnapshot(){ const storage={}; for(let index=0;index<localStorage.length;index++){ const key=localStorage.key(index); if(key?.startsWith("daily-fuel-")) storage[key]=localStorage.getItem(key); } return storage; }
+function updateBackupStatus(){ const saved=localStorage.getItem("daily-fuel-last-backup"); document.querySelector("#lastBackupDate").textContent=saved?formatDate(new Date(saved),{month:"long",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"}):"Never"; }
+function openBackupDialog(){ updateBackupStatus(); document.querySelector("#backupDialog").showModal(); }
+function downloadBackup(){
+  const exportedAt=new Date().toISOString(); localStorage.setItem("daily-fuel-last-backup",exportedAt);
+  const backup={format:"daily-fuel-backup",version:1,exportedAt,libraryRecipes:RECIPES.map(({id,...recipe})=>recipe),storage:backupStorageSnapshot()};
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"}), link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download=`daily-fuel-private-backup-${exportedAt.slice(0,10)}.json`; document.body.append(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(link.href),1000); updateBackupStatus();
+}
+async function restoreBackup(file){
+  let backup; try{ backup=JSON.parse(await file.text()); }catch{ showAppModal({title:"That file could not be read",message:"Choose a valid Daily Fuel JSON backup file.",confirmText:"Got it"}); return; }
+  if(backup?.format!=="daily-fuel-backup"||!backup.storage||typeof backup.storage!=="object"||!Array.isArray(backup.libraryRecipes)){ showAppModal({title:"This is not a Daily Fuel backup",message:"The selected JSON file does not contain the expected backup information.",confirmText:"Got it"}); return; }
+  document.querySelector("#backupDialog").close();
+  const approved=await showAppModal({title:"Replace this browser's saved data?",message:`This backup contains ${backup.libraryRecipes.length} library recipes and was created ${formatDate(new Date(backup.exportedAt),{month:"short",day:"numeric",year:"numeric"})}. Current Daily Fuel data in this browser will be replaced.`,confirmText:"Restore backup",cancelText:"Cancel",tone:"danger"});
+  if(!approved)return;
+  Object.keys(localStorage).filter(key=>key.startsWith("daily-fuel-")).forEach(key=>localStorage.removeItem(key));
+  const rebuiltLibraryKeys=new Set(["daily-fuel-custom-recipes","daily-fuel-recipe-overrides","daily-fuel-imported-recipes"]);
+  Object.entries(backup.storage).forEach(([key,value])=>{ if(key.startsWith("daily-fuel-")&&!rebuiltLibraryKeys.has(key)&&typeof value==="string")localStorage.setItem(key,value); });
+  localStorage.setItem("daily-fuel-imported-recipes",JSON.stringify(backup.libraryRecipes)); localStorage.setItem("daily-fuel-last-backup",new Date().toISOString()); location.reload();
+}
 function mealItemRow(values=["","",0,0,0,0,0]) {
   const row=document.createElement("div"); row.className="meal-item-row";
   row.innerHTML=`<input class="meal-ing-name" required placeholder="Food item" aria-label="Food item" value="${escapeHtml(values[0])}"><input class="meal-ing-qty" placeholder="Amount used" aria-label="Amount used" value="${escapeHtml(values[1])}">${["cal","p","c","f","s"].map((key,index)=>`<input class="meal-ing-${key}" type="number" min="0" step="0.1" required aria-label="${key}" placeholder="${key}" value="${values[index+2]??""}">`).join("")}<button type="button" class="remove-meal-item" aria-label="Remove item">×</button>`;
@@ -337,6 +310,11 @@ document.querySelector("#dayDetailMeals").addEventListener("click",async e=>{
   const remove=e.target.closest("[data-day-modal-delete]"); if(remove){ const meal=remove.dataset.meal,index=Number(remove.dataset.dayModalDelete),data=loadWeek(),food=data[activeDayDetail][meal][index]; if(await showAppModal({title:`Remove ${food[0]}?`,message:`This item will be removed from ${activeDayDetail} ${meal}.`,confirmText:"Remove item",cancelText:"Keep it",tone:"danger"})){ data[activeDayDetail][meal].splice(index,1); saveWeek(data); render(); openDayDetail(activeDayDetail); } }
 });
 document.querySelector("#addFoodTop").addEventListener("click",()=> currentPage === "library" ? openRecipeBuilder() : openFood());
+document.querySelector("#settingsButton").addEventListener("click",openBackupDialog);
+document.querySelector("#closeBackupDialog").addEventListener("click",()=>document.querySelector("#backupDialog").close());
+document.querySelector("#downloadBackup").addEventListener("click",downloadBackup);
+document.querySelector("#chooseBackupFile").addEventListener("click",()=>document.querySelector("#backupFileInput").click());
+document.querySelector("#backupFileInput").addEventListener("change",event=>{ const file=event.target.files[0]; event.target.value=""; if(file)restoreBackup(file); });
 document.querySelector("#saveFoodToLibrary").addEventListener("click",saveEditedFoodToLibrary);
 document.querySelector("#addIngredientRow").addEventListener("click",()=>ingredientRow());
 document.querySelector("#addMealItemRow").addEventListener("click",()=>mealItemRow());

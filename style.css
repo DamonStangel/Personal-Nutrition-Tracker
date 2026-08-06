@@ -200,6 +200,19 @@ dialog::backdrop { background: #111a14a8; backdrop-filter: blur(3px); }
 .app-modal-content h2 { font-size:20px; }
 .app-modal-content p { margin:8px auto 22px; max-width:320px; color:var(--muted); font-size:13px; }
 .app-modal-actions { display:flex; justify-content:center; gap:8px; }
+.backup-dialog { width:min(680px,calc(100% - 28px)); }
+.backup-dialog-content { padding:27px; }
+.backup-status { margin:18px 0 12px; padding:18px; border:1px solid #cbd9c8; border-radius:11px; background:#edf4ea; }
+.backup-status span { display:block; color:var(--muted); font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; }
+.backup-status strong { display:block; margin:3px 0 6px; font:800 18px Manrope; }
+.backup-status p,.backup-option p { margin:0; color:var(--muted); font-size:11px; }
+.backup-option { display:grid; grid-template-columns:1fr auto; align-items:center; gap:18px; padding:17px 4px; border-bottom:1px solid var(--line); }
+.backup-option strong { display:block; margin-bottom:3px; font:700 13px Manrope; }
+.backup-option .primary-button { justify-self:end; }
+.backup-reminder { margin-top:17px; padding:15px 17px; border-radius:9px; background:var(--wash); }
+.backup-reminder strong { font-size:12px; }
+.backup-reminder ol { margin:7px 0 0; padding-left:19px; color:var(--muted); font-size:11px; }
+.backup-reminder li+li { margin-top:4px; }
 .app-modal-actions button { min-width:105px; }
 .app-modal .primary-button.danger { background:#a95446; }
 .day-detail-dialog { width:min(1420px,calc(100% - 20px)); max-height:calc(100vh - 24px); padding:0; background:var(--paper); color:var(--ink); }
@@ -326,6 +339,7 @@ body.dark .day-detail-food:nth-child(odd) { background:#303f34; }
 body.dark .day-goal-meter > div { background:#111a14; }
 body.dark .day-detail-meal-head button { color:#d1e5cd; background:#4a614e; }
 body.dark .day-detail-food-actions button { background:#19231c; }
+body.dark .backup-status { background:#2c3c30; border-color:#58705c; }
 body.dark .meal-total,body.dark .day-header,body.dark .meal { border-color:var(--line); }
 body.dark label { color:#b9c4bc; }
 body.dark .goal-ring::after { background:var(--paper); }
