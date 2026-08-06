@@ -39,7 +39,7 @@ h1 { font-size: 28px; } h2 { font-size: 24px; }
 .theme-toggle { font-size:17px; }
 .danger-ghost { padding:10px 12px; border:1px solid #dfc8c3; border-radius:9px; color:#a74c3e; background:transparent; font-weight:700; font-size:11px; }
 .danger-ghost:hover { background:#a74c3e; color:white; border-color:#a74c3e; }
-.goal-strip { margin: 25px 38px 18px; background: white; border: 1px solid var(--line); border-radius: 13px; padding: 17px 20px; display: grid; grid-template-columns: 1.3fr repeat(3, 1fr) auto; align-items: center; gap: 22px; box-shadow: 0 3px 12px #1c2a1f08; }
+.goal-strip { margin: 25px 38px 18px; background: white; border: 1px solid var(--line); border-radius: 13px; padding: 17px 20px; display: grid; grid-template-columns: 1.3fr repeat(4, 1fr) auto; align-items: center; gap: 18px; box-shadow: 0 3px 12px #1c2a1f08; }
 .goal-summary, .macro-summary { display: flex; align-items: center; gap: 12px; }
 .goal-ring { width: 54px; height: 54px; display: grid; place-items: center; border-radius: 50%; background: conic-gradient(var(--green) 0%, #e8ede8 0); position: relative; }
 .goal-ring::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: white; }
@@ -49,6 +49,7 @@ h1 { font-size: 28px; } h2 { font-size: 24px; }
 .goal-strip p { margin: 1px 0 0; color: var(--muted); font-size: 11px; }
 .macro-summary { border-left: 1px solid var(--line); padding-left: 22px; }
 .macro-dot { width: 8px; height: 34px; border-radius: 5px; background: var(--protein); }
+.macro-dot.calories { background:var(--green); }
 .macro-dot.carbs { background: var(--carbs); } .macro-dot.fats { background: var(--fats); }
 .ghost-button { padding: 9px 13px; font-weight: 600; }
 .week-grid { padding: 0 38px 38px; display: grid; grid-template-columns: repeat(7, minmax(160px, 1fr)); gap: 10px; overflow-x: auto; }

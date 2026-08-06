@@ -84,8 +84,8 @@ function render() {
   document.querySelector("#weeklyPercent").textContent = `${pct}%`; document.querySelector("#goalRing").style.background = `conic-gradient(var(--green) ${Math.min(pct,100)}%, #e8ede8 0)`;
   document.querySelector("#weeklyCalories").textContent = `${Math.round(week.cal).toLocaleString()} / ${target.toLocaleString()}`;
   document.querySelector("#weeklySubtext").textContent = `${Math.max(target-week.cal,0).toLocaleString(undefined,{maximumFractionDigits:0})} calories remaining · averages from ${averageDays} ${averageDays===1?"day":"days"}`;
-  document.querySelector("#avgProtein").textContent = `${tidy(averageDays?averageTotals.p/averageDays:0)}g`; document.querySelector("#avgCarbs").textContent = `${tidy(averageDays?averageTotals.c/averageDays:0)}g`; document.querySelector("#avgFats").textContent = `${tidy(averageDays?averageTotals.fat/averageDays:0)}g`;
-  document.querySelector("#proteinGoalLabel").textContent=`Goal ${tidy(GOALS.protein)}g`; document.querySelector("#carbsGoalLabel").textContent=`Goal ${tidy(GOALS.carbs)}g`; document.querySelector("#fatGoalLabel").textContent=`Goal ${tidy(GOALS.fat)}g`;
+  document.querySelector("#avgCalories").textContent = `${tidy(averageDays?averageTotals.cal/averageDays:0).toLocaleString()} cal`; document.querySelector("#avgProtein").textContent = `${tidy(averageDays?averageTotals.p/averageDays:0)}g`; document.querySelector("#avgCarbs").textContent = `${tidy(averageDays?averageTotals.c/averageDays:0)}g`; document.querySelector("#avgFats").textContent = `${tidy(averageDays?averageTotals.fat/averageDays:0)}g`;
+  document.querySelector("#calorieGoalLabel").textContent=`Goal ${tidy(GOALS.calories).toLocaleString()} cal`; document.querySelector("#proteinGoalLabel").textContent=`Goal ${tidy(GOALS.protein)}g`; document.querySelector("#carbsGoalLabel").textContent=`Goal ${tidy(GOALS.carbs)}g`; document.querySelector("#fatGoalLabel").textContent=`Goal ${tidy(GOALS.fat)}g`;
   const streak=calculateStreak(); document.querySelector("#streakCount").textContent=`${streak} day streak`; document.querySelector("#streakMessage").textContent=streak ? "Keep it rolling" : "Log today to begin";
 }
 
