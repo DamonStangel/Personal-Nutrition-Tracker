@@ -8,6 +8,7 @@ let currentPage = "weekly";
 let editingFood = null;
 let editingRecipeId = null;
 let activeDayDetail = null;
+let deletedRecipeNames = JSON.parse(localStorage.getItem("daily-fuel-deleted-recipes") || "[]");
 
 const RECIPES = [
   ["Example Protein Oatmeal","breakfast",390,31,52,8,10,["Rolled oats","Protein powder","Milk","Berries"]],
@@ -23,6 +24,7 @@ const savedRecipes = JSON.parse(localStorage.getItem("daily-fuel-custom-recipes"
 savedRecipes.forEach((recipe,index) => { if(!RECIPES.some(existing=>existing.name.toLowerCase()===String(recipe.name).toLowerCase())) RECIPES.push({...recipe,id:`custom-${index}`}); });
 const recipeOverrides = JSON.parse(localStorage.getItem("daily-fuel-recipe-overrides") || "{}");
 RECIPES.forEach(recipe=>{ if(recipeOverrides[String(recipe.id)]) Object.assign(recipe,recipeOverrides[String(recipe.id)]); });
+RECIPES.splice(0,RECIPES.length,...RECIPES.filter(recipe=>!deletedRecipeNames.includes(recipe.name.toLowerCase())));
 
 const sample = {
   Monday: {
@@ -97,7 +99,14 @@ function renderLibrary() {
     return searchHit && filterHit;
   }).sort((a,b)=>activeRecipeSort==="za"?b.name.localeCompare(a.name):activeRecipeSort==="protein-high"?b.p-a.p||a.name.localeCompare(b.name):activeRecipeSort==="protein-low"?a.p-b.p||a.name.localeCompare(b.name):a.name.localeCompare(b.name));
   document.querySelector("#recipeCount").textContent = RECIPES.length;
-  document.querySelector("#recipeGrid").innerHTML = matches.length ? matches.map(r => `<article class="recipe-card"><div class="recipe-top"><div><span class="recipe-type">${r.type}</span><h3>${r.name}</h3></div><span class="protein-badge">${tidy(r.p)}p</span></div><div class="recipe-macros"><div><strong>${tidy(r.cal)}</strong><small>cal</small></div><div><strong>${tidy(r.c)}g</strong><small>carbs</small></div><div><strong>${tidy(r.fat)}g</strong><small>fat</small></div><div><strong>${tidy(r.s)}g</strong><small>sugar</small></div></div><p class="ingredient-preview">${r.ingredients.slice(0,3).join(" · ")}${r.ingredients.length>3?" · +more":""}</p><div class="recipe-actions"><button class="recipe-details" data-details="${r.id}">View</button><button class="recipe-edit" data-edit-recipe="${r.id}">Edit</button><button class="add-recipe" data-recipe="${r.id}">＋ Add</button></div></article>`).join("") : `<div class="empty-library"><h3>No recipes found</h3><p>Try another search or filter.</p></div>`;
+  document.querySelector("#recipeGrid").innerHTML = matches.length ? matches.map(r => `<article class="recipe-card"><div class="recipe-top"><div><span class="recipe-type">${r.type}</span><h3>${r.name}</h3></div><span class="protein-badge">${tidy(r.p)}p</span></div><div class="recipe-macros"><div><strong>${tidy(r.cal)}</strong><small>cal</small></div><div><strong>${tidy(r.c)}g</strong><small>carbs</small></div><div><strong>${tidy(r.fat)}g</strong><small>fat</small></div><div><strong>${tidy(r.s)}g</strong><small>sugar</small></div></div><p class="ingredient-preview">${r.ingredients.slice(0,3).join(" · ")}${r.ingredients.length>3?" · +more":""}</p><div class="recipe-actions"><button class="recipe-details" data-details="${r.id}">View</button><button class="recipe-edit" data-edit-recipe="${r.id}">Edit</button><button class="add-recipe" data-recipe="${r.id}">＋ Add</button><button class="delete-recipe" data-delete-recipe="${r.id}" aria-label="Delete ${escapeHtml(r.name)}" title="Delete recipe">×</button></div></article>`).join("") : `<div class="empty-library"><h3>No recipes found</h3><p>Try another search or filter.</p></div>`;
+}
+
+function clearRecipeDeletion(name){ const normalized=name.toLowerCase(); if(!deletedRecipeNames.includes(normalized))return; deletedRecipeNames=deletedRecipeNames.filter(saved=>saved!==normalized); localStorage.setItem("daily-fuel-deleted-recipes",JSON.stringify(deletedRecipeNames)); }
+async function deleteLibraryRecipe(recipe){
+  if(!await showAppModal({title:`Delete ${recipe.name}?`,message:"This removes the recipe from your Food Library and Quick Entry. Existing daily-log entries will not be changed.",confirmText:"Delete recipe",cancelText:"Keep recipe",tone:"danger"}))return;
+  const normalized=recipe.name.toLowerCase(); if(!deletedRecipeNames.includes(normalized))deletedRecipeNames.push(normalized); localStorage.setItem("daily-fuel-deleted-recipes",JSON.stringify(deletedRecipeNames));
+  const index=RECIPES.indexOf(recipe); if(index>=0)RECIPES.splice(index,1); populateQuickRecipes(); renderLibrary();
 }
 
 function recipeTable(recipe) {
@@ -143,7 +152,7 @@ function openRecipeBuilder(recipe=null) {
 function saveRecipeChanges() {
   const name=document.querySelector("#newRecipeName").value.trim(), rows=editorRows();
   if(!name || !rows.length || rows.some(r=>!r[0]||!r[1])) { showAppModal({title:"Recipe needs a little more",message:"Give the recipe a name and complete every ingredient and quantity.",confirmText:"Got it"}); return; }
-  const total=calculatedRecipeTotal(rows), recipeData={name,type:document.querySelector("#newRecipeType").value,...total,ingredients:rows.map(r=>r[0]),rows};
+  const total=calculatedRecipeTotal(rows), recipeData={name,type:document.querySelector("#newRecipeType").value,...total,ingredients:rows.map(r=>r[0]),rows}; clearRecipeDeletion(name);
   if(editingRecipeId!==null){ const recipe=RECIPES.find(r=>String(r.id)===String(editingRecipeId)); Object.assign(recipe,recipeData); const overrides=JSON.parse(localStorage.getItem("daily-fuel-recipe-overrides")||"{}"); overrides[String(editingRecipeId)]=recipeData; localStorage.setItem("daily-fuel-recipe-overrides",JSON.stringify(overrides)); }
   else { const stored=JSON.parse(localStorage.getItem("daily-fuel-custom-recipes")||"[]"); stored.push(recipeData); localStorage.setItem("daily-fuel-custom-recipes",JSON.stringify(stored)); RECIPES.push({...recipeData,id:`custom-${stored.length-1}`}); }
   document.querySelector("#recipeDialog").close(); populateQuickRecipes(); renderLibrary(); showAppModal({title:"Recipe saved",message:`${name} and its recalculated macros are now available throughout Daily Fuel.`,confirmText:"Done"});
@@ -288,7 +297,7 @@ function saveEditedFoodToLibrary() {
   const name=document.querySelector("#foodName").value.trim(); if(!name){ showAppModal({title:"Give this food a name",message:"A name is required before the item can be saved to your Food Library.",confirmText:"Got it"}); return; }
   const values=["Calories","Protein","Carbs","Fat","Sugar"].map(key=>tidy(Number(document.querySelector(`#food${key}`).value)||0)), meal=document.querySelector("#foodMeal").value;
   const serving=document.querySelector("#foodServing").value.trim()||"1 serving", rows=[[name,serving,...values]], recipeData={name,type:meal==="Breakfast"?"breakfast":"meal",cal:values[0],p:values[1],c:values[2],fat:values[3],s:values[4],ingredients:[name],rows};
-  const stored=JSON.parse(localStorage.getItem("daily-fuel-custom-recipes")||"[]"); stored.push(recipeData); localStorage.setItem("daily-fuel-custom-recipes",JSON.stringify(stored)); RECIPES.push({...recipeData,id:`custom-${stored.length-1}`}); populateQuickRecipes();
+  const stored=JSON.parse(localStorage.getItem("daily-fuel-custom-recipes")||"[]"); stored.push(recipeData); localStorage.setItem("daily-fuel-custom-recipes",JSON.stringify(stored)); clearRecipeDeletion(name); RECIPES.push({...recipeData,id:`custom-${stored.length-1}`}); populateQuickRecipes();
   showAppModal({title:"Item saved to your library",message:`${name} is now available in the Food Library and the Quick Entry recipe picker.`,confirmText:"Done"});
 }
 
@@ -323,8 +332,9 @@ document.querySelectorAll(".nav-item[data-page]").forEach(b => b.addEventListene
 document.querySelector("#recipeSearch").addEventListener("input",renderLibrary);
 document.querySelector("#recipeSort").addEventListener("change",event=>{ activeRecipeSort=event.target.value; renderLibrary(); });
 document.querySelector("#recipeFilters").addEventListener("click",e=>{ const b=e.target.closest("[data-filter]"); if(!b)return; activeRecipeFilter=b.dataset.filter; document.querySelectorAll(".filter-chip").forEach(x=>x.classList.toggle("active",x===b)); renderLibrary(); });
-document.querySelector("#recipeGrid").addEventListener("click",e=>{
-  const add=e.target.closest("[data-recipe]"), details=e.target.closest("[data-details]"), edit=e.target.closest("[data-edit-recipe]");
+document.querySelector("#recipeGrid").addEventListener("click",async e=>{
+  const add=e.target.closest("[data-recipe]"), details=e.target.closest("[data-details]"), edit=e.target.closest("[data-edit-recipe]"), remove=e.target.closest("[data-delete-recipe]");
+  if(remove){ const recipe=RECIPES.find(x=>String(x.id)===remove.dataset.deleteRecipe); if(recipe)await deleteLibraryRecipe(recipe); return; }
   if(add){ const r=RECIPES.find(x=>String(x.id)===add.dataset.recipe); prefillRecipe(r); }
   if(details){ const r=RECIPES.find(x=>String(x.id)===details.dataset.details); openRecipeDetails(r); }
   if(edit){ const r=RECIPES.find(x=>String(x.id)===edit.dataset.editRecipe); openRecipeBuilder(r); }

@@ -90,6 +90,8 @@ h1 { font-size: 28px; } h2 { font-size: 24px; }
 .recipe-details { border:1px solid var(--line); background:white; color:#556359; }
 .recipe-edit { border:1px solid #b9cab5; background:#edf3ea; color:#486245; }
 .add-recipe { border:0; background:#304e36; color:white; }
+.recipe-actions .delete-recipe { flex:0 0 34px; border:1px solid #dfc8c3; color:#a74c3e; background:#fff8f6; font-size:16px; }
+.recipe-actions .delete-recipe:hover { color:white; background:#a74c3e; border-color:#a74c3e; }
 .empty-library { grid-column:1/-1; padding:60px; text-align:center; color:var(--muted); }
 .goals-layout { padding:25px 38px 40px; display:grid; grid-template-columns:minmax(310px,.8fr) minmax(480px,1.4fr); gap:18px; }
 .goals-card { background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:25px; box-shadow:0 3px 12px #1c2a1f08; align-self:start; }
@@ -324,6 +326,7 @@ body.dark .topbar { background:#19231c; }
 body.dark .goal-strip,body.dark .day-card,body.dark .recipe-card,body.dark dialog,body.dark .goals-card,body.dark .insight-stat,body.dark .insight-panel { background:var(--paper); color:var(--ink); box-shadow:0 6px 20px #00000028; }
 body.dark input,body.dark select,body.dark .icon-button,body.dark .date-button,body.dark .ghost-button,body.dark .filter-chip,body.dark .recipe-details { background:#162019; color:var(--ink); border-color:#56695a; }
 body.dark .recipe-edit { background:#253329; color:#b9d2b5; border-color:#405443; }
+body.dark .recipe-actions .delete-recipe { color:#efb1a7; background:#3b2926; border-color:#79534c; }
 body.dark .meal { background:#202a23; border-top-color:#0d140f; }
 body.dark .food:nth-of-type(even) { background:#2c3a30; }
 body.dark .food:nth-of-type(odd) { background:#39352c; }
