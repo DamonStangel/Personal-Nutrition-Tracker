@@ -1,4 +1,4 @@
-# Daily Fuel — Personal Nutrition Tracker
+# Daily Fuel - Personal Nutrition Tracker
 
 A lightweight weekly calorie and macro tracker built with plain HTML, CSS, and JavaScript.
 
