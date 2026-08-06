@@ -61,6 +61,7 @@ function calculateStreak() {
 function tidy(n) { return Number.isInteger(n) ? n : Math.round(n * 10) / 10; }
 function macroText(t) { return `${tidy(t.cal)}cal · ${tidy(t.p)}p · ${tidy(t.c)}c · ${tidy(t.fat)}f · ${tidy(t.s)}s`; }
 function formatDate(d, opts) { return new Intl.DateTimeFormat("en-US", opts).format(d); }
+function localDateValue(date=new Date()){ const local=new Date(date.getTime()-date.getTimezoneOffset()*60000); return local.toISOString().slice(0,10); }
 
 function render() {
   const data = loadWeek(), sunday = getSunday(), grid = document.querySelector("#weekGrid");
@@ -184,8 +185,21 @@ function renderGoals() {
   history.innerHTML=[...weights].reverse().map(w=>`<div class="weight-row"><span>Week of ${formatDate(new Date(`${w.date}T12:00:00`),{month:"short",day:"numeric",year:"numeric"})}</span><strong>${tidy(w.weight)} lb</strong><button data-remove-weight="${w.date}" aria-label="Remove weight from ${w.date}">×</button></div>`).join("");
 }
 
+function earliestLoggedDate(){
+  let earliest=""; const dayNames=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  for(let index=0;index<localStorage.length;index++){ const key=localStorage.key(index), match=key?.match(/^daily-fuel-(\d{4}-\d{2}-\d{2})$/); if(!match)continue; let data; try{data=JSON.parse(localStorage.getItem(key));}catch{continue;} const weekStart=new Date(`${match[1]}T12:00:00`); dayNames.forEach((day,offset)=>{ if(!data?.[day]||!MEALS.some(meal=>(data[day][meal]||[]).length))return; const date=new Date(weekStart); date.setDate(weekStart.getDate()+offset); const value=date.toISOString().slice(0,10); if(!earliest||value<earliest)earliest=value; }); }
+  return earliest;
+}
+function renderDietStart(){
+  const saved=localStorage.getItem("daily-fuel-diet-start-date"), suggested=earliestLoggedDate(), label=document.querySelector("#dietStartLabel"), count=document.querySelector("#dietDayCount"), button=document.querySelector("#editDietStart");
+  if(!saved){ label.textContent="Not set"; count.textContent=suggested?`Earliest logged day: ${formatDate(new Date(`${suggested}T12:00:00`),{month:"short",day:"numeric",year:"numeric"})}`:"Choose when this journey began"; button.textContent="Set date"; return; }
+  const start=new Date(`${saved}T12:00:00`), today=new Date(); today.setHours(12,0,0,0); const elapsed=Math.round((today-start)/86400000);
+  label.textContent=formatDate(start,{month:"long",day:"numeric",year:"numeric"}); count.textContent=elapsed>=0?`Day ${elapsed+1} of this phase`:`Starts in ${Math.abs(elapsed)} day${Math.abs(elapsed)===1?"":"s"}`; button.textContent="Edit date";
+}
+function openDietStartDialog(){ const saved=localStorage.getItem("daily-fuel-diet-start-date"), suggested=earliestLoggedDate(); document.querySelector("#dietStartInput").value=saved||suggested||localDateValue(); document.querySelector("#clearDietStart").hidden=!saved; document.querySelector("#dietStartDialog").showModal(); }
+
 function renderInsights() {
-  const data=loadWeek(), days=Object.entries(data).map(([name,meals])=>({name,meals,total:dayTotal(meals),mealCount:MEALS.filter(meal=>(meals[meal]||[]).length).length}));
+  renderDietStart(); const data=loadWeek(), days=Object.entries(data).map(([name,meals])=>({name,meals,total:dayTotal(meals),mealCount:MEALS.filter(meal=>(meals[meal]||[]).length).length}));
   const logged=days.filter(d=>d.total.cal>0), complete=days.filter(d=>d.mealCount>1), caloriesHit=logged.filter(d=>Math.abs(d.total.cal-GOALS.calories)<=GOALS.calories*.1).length, proteinHit=logged.filter(d=>d.total.p>=GOALS.protein).length;
   const averageCalories=logged.length?logged.reduce((sum,d)=>sum+d.total.cal,0)/logged.length:0, averageProtein=complete.length?complete.reduce((sum,d)=>sum+d.total.p,0)/complete.length:0;
   const sunday=getSunday(), saturday=new Date(sunday); saturday.setDate(sunday.getDate()+6); document.querySelector("#insightWeekLabel").textContent=`${formatDate(sunday,{month:"long",day:"numeric"})}–${formatDate(saturday,{month:"long",day:"numeric",year:"numeric"})} · based on your saved entries`;
@@ -324,6 +338,9 @@ document.querySelector("#closeBackupDialog").addEventListener("click",()=>docume
 document.querySelector("#downloadBackup").addEventListener("click",downloadBackup);
 document.querySelector("#chooseBackupFile").addEventListener("click",()=>document.querySelector("#backupFileInput").click());
 document.querySelector("#backupFileInput").addEventListener("change",event=>{ const file=event.target.files[0]; event.target.value=""; if(file)restoreBackup(file); });
+document.querySelector("#editDietStart").addEventListener("click",openDietStartDialog);
+document.querySelector("#dietStartForm").addEventListener("submit",event=>{ if(event.submitter?.value==="cancel")return; event.preventDefault(); localStorage.setItem("daily-fuel-diet-start-date",document.querySelector("#dietStartInput").value); document.querySelector("#dietStartDialog").close(); renderDietStart(); });
+document.querySelector("#clearDietStart").addEventListener("click",async()=>{ document.querySelector("#dietStartDialog").close(); if(await showAppModal({title:"Clear diet start date?",message:"The saved start date and Day count will be removed. Your meal entries and streak will not change.",confirmText:"Clear date",cancelText:"Keep date",tone:"danger"})){ localStorage.removeItem("daily-fuel-diet-start-date"); renderDietStart(); } });
 document.querySelector("#saveFoodToLibrary").addEventListener("click",saveEditedFoodToLibrary);
 document.querySelector("#addIngredientRow").addEventListener("click",()=>ingredientRow());
 document.querySelector("#addMealItemRow").addEventListener("click",()=>mealItemRow());

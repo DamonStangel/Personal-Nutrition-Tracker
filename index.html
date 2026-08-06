@@ -120,7 +120,7 @@
 
     <div id="insightsPage" class="page-panel" hidden>
       <section class="insights-wrap">
-        <div class="insight-intro"><div><p class="eyebrow">WEEKLY REVIEW</p><h2>Turn your log into decisions.</h2><p id="insightWeekLabel">A clear look at consistency, targets, and daily patterns.</p></div><span class="insight-mark">↗</span></div>
+        <div class="insight-intro"><div><p class="eyebrow">WEEKLY REVIEW</p><h2>Turn your log into decisions.</h2><p id="insightWeekLabel">A clear look at consistency, targets, and daily patterns.</p></div><div class="diet-start-card"><small>DIET START DATE</small><strong id="dietStartLabel">Not set</strong><span id="dietDayCount">Choose when this journey began</span><button id="editDietStart" type="button">Set date</button></div></div>
         <div class="insight-stats" id="insightStats"></div>
         <div class="insight-layout">
           <section class="insight-panel"><div class="section-heading"><div><p class="eyebrow">DAY BY DAY</p><h2>Calories and protein</h2><p>Compare each logged day with your current goals.</p></div></div><div id="dailyInsightChart" class="daily-insight-chart"></div></section>
@@ -212,6 +212,15 @@
       <div class="backup-option"><div><strong>Restore from backup</strong><p>Use a previous Daily Fuel JSON file to replace the data currently saved in this browser.</p></div><button id="chooseBackupFile" class="ghost-button" type="button">Choose JSON file</button><input id="backupFileInput" type="file" accept="application/json,.json" hidden></div>
       <div class="backup-reminder"><strong>Simple routine</strong><ol><li>Keep using Daily Fuel normally.</li><li>Download a backup after meaningful changes.</li><li>Keep that private JSON in OneDrive, Google Drive, Dropbox, or another safe location.</li></ol></div>
     </div>
+  </dialog>
+
+  <dialog id="dietStartDialog" class="diet-start-dialog">
+    <form id="dietStartForm" method="dialog">
+      <div class="dialog-heading"><div><p class="eyebrow">TRACKING TIMELINE</p><h2>Diet start date</h2></div><button class="close-button" value="cancel" formnovalidate aria-label="Close diet start date">×</button></div>
+      <p class="diet-start-help">Set the first day of this diet or tracking phase. Insights will keep count even when your meal-log streak resets.</p>
+      <label class="full">Start date<input id="dietStartInput" type="date" required></label>
+      <div class="dialog-actions"><button id="clearDietStart" type="button" class="danger-ghost">Clear date</button><span class="dialog-action-spacer"></span><button value="cancel" class="ghost-button" formnovalidate>Cancel</button><button value="default" class="primary-button">Save start date</button></div>
+    </form>
   </dialog>
 
   <dialog id="dayDetailDialog" class="day-detail-dialog">
