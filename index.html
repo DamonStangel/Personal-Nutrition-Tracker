@@ -14,7 +14,7 @@
   <aside class="sidebar">
     <a class="brand" href="#" aria-label="Daily Fuel home">
       <span class="brand-mark">df</span>
-      <span>daily fuel</span>
+      <span>Daily Fuel</span>
     </a>
 
     <nav aria-label="Main navigation">
@@ -76,12 +76,15 @@
       </section>
       <section class="library-tools">
         <label class="search-box"><span>⌕</span><input id="recipeSearch" type="search" placeholder="Search recipes or ingredients…"></label>
-        <div class="filter-group" id="recipeFilters">
-          <button class="filter-chip active" data-filter="all">All</button>
-          <button class="filter-chip" data-filter="breakfast">Breakfast</button>
-          <button class="filter-chip" data-filter="meal">Meals</button>
-          <button class="filter-chip" data-filter="side">Sides</button>
-          <button class="filter-chip" data-filter="high-protein">High protein</button>
+        <div class="library-filter-tools">
+          <div class="filter-group" id="recipeFilters">
+            <button class="filter-chip active" data-filter="all">All</button>
+            <button class="filter-chip" data-filter="breakfast">Breakfast</button>
+            <button class="filter-chip" data-filter="meal">Meals</button>
+            <button class="filter-chip" data-filter="side">Sides</button>
+            <button class="filter-chip" data-filter="high-protein">High protein</button>
+          </div>
+          <label class="sort-control">Sort by<select id="recipeSort"><option value="az">Name A–Z</option><option value="za">Name Z–A</option><option value="protein-high">Protein high–low</option><option value="protein-low">Protein low–high</option></select></label>
         </div>
       </section>
       <section class="recipe-grid" id="recipeGrid" aria-live="polite"></section>
@@ -132,16 +135,19 @@
         <div><p class="eyebrow">QUICK ENTRY</p><h2 id="foodDialogTitle">Add food</h2></div>
         <button class="close-button" value="cancel" formnovalidate aria-label="Close">×</button>
       </div>
-      <div class="full library-picker">
+      <div class="entry-mode-toggle full" role="group" aria-label="Entry type"><button type="button" class="active" data-entry-mode="single">Single food</button><button type="button" data-entry-mode="meal">Full meal</button></div>
+      <label>Day<select id="foodDay" required></select></label>
+      <label>Meal<select id="foodMeal" required><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snacks</option><option>Shake</option></select></label>
+      <div id="singleFoodEntry" class="full entry-panel">
+      <div class="library-picker">
         <label for="quickRecipeSearch">Choose from your Food Library</label>
         <div class="quick-recipe-search"><span aria-hidden="true">⌕</span><input id="quickRecipeSearch" type="search" placeholder="Search recipes or ingredients…" autocomplete="off"></div>
         <label class="sr-only" for="recipeQuickSelect">Matching foods and recipes</label>
         <select id="recipeQuickSelect"><option value="">Select a saved recipe…</option></select>
         <small id="quickRecipeStatus" aria-live="polite">Optional — search or select a recipe to fill in all macro fields below.</small>
       </div>
-      <label>Day<select id="foodDay" required></select></label>
-      <label>Meal<select id="foodMeal" required><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snacks</option><option>Shake</option></select></label>
       <label class="full">Food name<input id="foodName" required placeholder="e.g. Chicken salad ranch"></label>
+      <label class="full">Serving / amount used<input id="foodServing" placeholder="e.g. 196g, 1 cup, 2 slices"></label>
       <label class="full">Quantity
         <div class="quantity-stepper">
           <button id="decreaseQuantity" type="button" aria-label="Decrease quantity">−</button>
@@ -156,6 +162,12 @@
         <label>Carbs (g)<input id="foodCarbs" type="number" min="0" step="0.1" required placeholder="8.5"></label>
         <label>Fat (g)<input id="foodFat" type="number" min="0" step="0.1" required placeholder="23.7"></label>
         <label>Sugar (g)<input id="foodSugar" type="number" min="0" step="0.1" required placeholder="1"></label>
+      </div>
+      </div>
+      <div id="fullMealEntry" class="full entry-panel" hidden>
+        <div class="ingredient-editor-head"><div><strong>Meal items</strong><small>Enter every food and the macros for the exact amount you will eat.</small></div><button id="addMealItemRow" type="button" class="ghost-button">＋ Add item</button></div>
+        <div class="ingredient-editor meal-item-editor" id="mealItemEditor"></div>
+        <div class="builder-total"><span>Calculated meal total</span><strong id="quickMealTotal">0cal · 0p · 0c · 0f · 0s</strong></div>
       </div>
       <div class="dialog-actions"><button id="saveFoodToLibrary" type="button" class="library-save-button" hidden>▣ Save to Food Library</button><span class="dialog-action-spacer"></span><button value="cancel" class="ghost-button" formnovalidate>Cancel</button><button id="saveFood" value="default" class="primary-button">Add to day</button></div>
     </form>

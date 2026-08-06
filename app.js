@@ -3,6 +3,7 @@ const DEFAULT_GOALS = { calories: 2500, protein: 190, carbs: 275, fat: 70, sugar
 let GOALS = {...DEFAULT_GOALS,...JSON.parse(localStorage.getItem("daily-fuel-goals") || "{}")};
 let weekOffset = 0;
 let activeRecipeFilter = "all";
+let activeRecipeSort = "az";
 let currentPage = "weekly";
 let editingFood = null;
 let editingRecipeId = null;
@@ -120,7 +121,7 @@ function render() {
     card.innerHTML = `<header class="day-header"><div class="day-title"><button class="day-title-button" data-open-day="${day}" aria-label="Open ${day} breakdown">${day}<span>↗</span></button><div class="day-header-actions"><span>${formatDate(date,{month:"short",day:"numeric"})}</span><button class="clear-day" data-clear-day="${day}" aria-label="Clear ${day}" title="Clear ${day}">⌫</button></div></div><div class="day-total">${tidy(total.cal).toLocaleString()} cal<small>${tidy(total.p)}p · ${tidy(total.c)}c · ${tidy(total.fat)}f · ${tidy(total.s)}s</small></div><div class="progress"><span style="width:${Math.min(total.cal/GOALS.calories*100,100)}%"></span></div></header>`;
     MEALS.forEach(meal => {
       const foods = meals[meal] || [], mt = sumFoods(foods), section = document.createElement("section"); section.className = "meal"; section.dataset.meal=meal.toLowerCase();
-      section.innerHTML = `<div class="meal-heading"><strong>${meal}</strong><div class="meal-heading-actions">${foods.length?`<button class="save-meal" data-save-meal="${meal}" data-day="${day}" aria-label="Save ${day} ${meal} to Food Library" title="Save meal to Food Library">▣</button>`:""}<button data-day="${day}" data-meal="${meal}" aria-label="Add to ${meal}">+</button></div></div>${foods.length ? foods.map((f,index) => { const quantity=f[6]||1; return `<div class="food"><div class="food-name">${escapeHtml(f[0])}${quantity>1?`<span class="food-quantity">×${quantity}</span>`:""}</div><div class="food-macros">${macroText({cal:f[1]*quantity,p:f[2]*quantity,c:f[3]*quantity,fat:f[4]*quantity,s:f[5]*quantity})}</div><div class="food-actions"><button class="edit-food" data-action="edit" data-day="${day}" data-meal="${meal}" data-index="${index}" aria-label="Edit ${escapeHtml(f[0])}">✎</button><button class="delete-food" data-action="delete" data-day="${day}" data-meal="${meal}" data-index="${index}" aria-label="Delete ${escapeHtml(f[0])}">×</button></div></div>`; }).join("") + `<div class="meal-total">Total: ${macroText(mt)}</div>` : `<div class="empty-meal">Nothing logged</div>`}`;
+      section.innerHTML = `<div class="meal-heading"><strong>${meal}</strong><div class="meal-heading-actions">${foods.length?`<button class="save-meal" data-save-meal="${meal}" data-day="${day}" aria-label="Save ${day} ${meal} to Food Library" title="Save meal to Food Library">▣</button>`:""}<button data-day="${day}" data-meal="${meal}" aria-label="Add to ${meal}">+</button></div></div>${foods.length ? foods.map((f,index) => { const quantity=f[6]||1; return `<div class="food"><div class="food-name">${escapeHtml(f[0])}${f[7]?`<small>${escapeHtml(f[7])}</small>`:""}${quantity>1?`<span class="food-quantity">×${quantity}</span>`:""}</div><div class="food-macros">${macroText({cal:f[1]*quantity,p:f[2]*quantity,c:f[3]*quantity,fat:f[4]*quantity,s:f[5]*quantity})}</div><div class="food-actions"><button class="edit-food" data-action="edit" data-day="${day}" data-meal="${meal}" data-index="${index}" aria-label="Edit ${escapeHtml(f[0])}">✎</button><button class="delete-food" data-action="delete" data-day="${day}" data-meal="${meal}" data-index="${index}" aria-label="Delete ${escapeHtml(f[0])}">×</button></div></div>`; }).join("") + `<div class="meal-total">Total: ${macroText(mt)}</div>` : `<div class="empty-meal">Nothing logged</div>`}`;
       card.append(section);
     });
     grid.append(card);
@@ -140,7 +141,7 @@ function renderLibrary() {
     const searchHit = !term || `${r.name} ${r.ingredients.join(" ")}`.toLowerCase().includes(term);
     const filterHit = activeRecipeFilter === "all" || r.type === activeRecipeFilter || (activeRecipeFilter === "high-protein" && r.p >= 40);
     return searchHit && filterHit;
-  });
+  }).sort((a,b)=>activeRecipeSort==="za"?b.name.localeCompare(a.name):activeRecipeSort==="protein-high"?b.p-a.p||a.name.localeCompare(b.name):activeRecipeSort==="protein-low"?a.p-b.p||a.name.localeCompare(b.name):a.name.localeCompare(b.name));
   document.querySelector("#recipeCount").textContent = RECIPES.length;
   document.querySelector("#recipeGrid").innerHTML = matches.length ? matches.map(r => `<article class="recipe-card"><div class="recipe-top"><div><span class="recipe-type">${r.type}</span><h3>${r.name}</h3></div><span class="protein-badge">${tidy(r.p)}p</span></div><div class="recipe-macros"><div><strong>${tidy(r.cal)}</strong><small>cal</small></div><div><strong>${tidy(r.c)}g</strong><small>carbs</small></div><div><strong>${tidy(r.fat)}g</strong><small>fat</small></div><div><strong>${tidy(r.s)}g</strong><small>sugar</small></div></div><p class="ingredient-preview">${r.ingredients.slice(0,3).join(" · ")}${r.ingredients.length>3?" · +more":""}</p><div class="recipe-actions"><button class="recipe-details" data-details="${r.id}">View</button><button class="recipe-edit" data-edit-recipe="${r.id}">Edit</button><button class="add-recipe" data-recipe="${r.id}">＋ Add</button></div></article>`).join("") : `<div class="empty-library"><h3>No recipes found</h3><p>Try another search or filter.</p></div>`;
 }
@@ -196,12 +197,12 @@ function saveRecipeChanges() {
 
 function prefillRecipe(recipe) {
   openFood("Monday", recipe.type === "breakfast" ? "Breakfast" : recipe.type === "side" ? "Dinner" : "Lunch");
-  document.querySelector("#foodName").value=recipe.name; [["Calories",recipe.cal],["Protein",recipe.p],["Carbs",recipe.c],["Fat",recipe.fat],["Sugar",recipe.s]].forEach(([k,v])=>document.querySelector(`#food${k}`).value=v);
+  document.querySelector("#foodName").value=recipe.name; document.querySelector("#foodServing").value="1 serving"; [["Calories",recipe.cal],["Protein",recipe.p],["Carbs",recipe.c],["Fat",recipe.fat],["Sugar",recipe.s]].forEach(([k,v])=>document.querySelector(`#food${k}`).value=v);
 }
 
 function saveLoggedMeal(day,meal) {
   const foods=loadWeek()[day][meal]||[]; if(!foods.length)return;
-  const rows=foods.map(food=>{ const quantity=food[6]||1; return [food[0],`${quantity} serving${quantity===1?"":"s"}`,tidy(food[1]*quantity),tidy(food[2]*quantity),tidy(food[3]*quantity),tidy(food[4]*quantity),tidy(food[5]*quantity)]; });
+  const rows=foods.map(food=>{ const quantity=food[6]||1; return [food[0],food[7]||`${quantity} serving${quantity===1?"":"s"}`,tidy(food[1]*quantity),tidy(food[2]*quantity),tidy(food[3]*quantity),tidy(food[4]*quantity),tidy(food[5]*quantity)]; });
   const name=foods.length<=2?foods.map(food=>food[0]).join(" + "):`${foods[0][0]} meal`;
   openRecipeBuilder({name,type:meal==="Breakfast"?"breakfast":"meal",rows,ingredients:rows.map(row=>row[0])});
 }
@@ -245,7 +246,7 @@ function openDayDetail(day) {
   const caloriePercent=Math.round(total.cal/GOALS.calories*100), proteinPercent=Math.round(total.p/GOALS.protein*100);
   document.querySelector("#dayDetailSummary").innerHTML=`<div><small>DAY TOTAL</small><strong>${macroText(total)}</strong></div><div class="day-goal-meter"><span><b>Calories</b>${tidy(total.cal)} / ${tidy(GOALS.calories)}</span><div><i style="width:${Math.min(caloriePercent,100)}%"></i></div></div><div class="day-goal-meter protein"><span><b>Protein</b>${tidy(total.p)}g / ${tidy(GOALS.protein)}g</span><div><i style="width:${Math.min(proteinPercent,100)}%"></i></div></div>`;
   const order=["Breakfast","Snacks","Lunch","Shake","Dinner"];
-  document.querySelector("#dayDetailMeals").innerHTML=order.map(meal=>{ const foods=meals[meal]||[], total=sumFoods(foods); return `<section class="day-detail-meal" data-meal="${meal.toLowerCase()}"><div class="day-detail-meal-head"><strong>${meal}</strong><div><span>${foods.length} item${foods.length===1?"":"s"}</span><button data-day-modal-add="${meal}" aria-label="Add to ${day} ${meal}">＋</button></div></div><div class="day-detail-foods">${foods.length?foods.map((food,itemIndex)=>{const quantity=food[6]||1; return `<div class="day-detail-food"><strong>${escapeHtml(food[0])}${quantity>1?` <em>×${quantity}</em>`:""}</strong><span>${macroText({cal:food[1]*quantity,p:food[2]*quantity,c:food[3]*quantity,fat:food[4]*quantity,s:food[5]*quantity})}</span><div class="day-detail-food-actions"><button data-day-modal-edit="${itemIndex}" data-meal="${meal}" aria-label="Edit ${escapeHtml(food[0])}">✎ Edit</button><button data-day-modal-delete="${itemIndex}" data-meal="${meal}" aria-label="Delete ${escapeHtml(food[0])}">×</button></div></div>`;}).join(""):`<p>Nothing logged</p>`}</div><div class="day-detail-meal-total"><span>Meal total</span><strong>${macroText(total)}</strong></div></section>`;}).join("");
+  document.querySelector("#dayDetailMeals").innerHTML=order.map(meal=>{ const foods=meals[meal]||[], total=sumFoods(foods); return `<section class="day-detail-meal" data-meal="${meal.toLowerCase()}"><div class="day-detail-meal-head"><strong>${meal}</strong><div><span>${foods.length} item${foods.length===1?"":"s"}</span><button data-day-modal-add="${meal}" aria-label="Add to ${day} ${meal}">＋</button></div></div><div class="day-detail-foods">${foods.length?foods.map((food,itemIndex)=>{const quantity=food[6]||1; return `<div class="day-detail-food"><strong>${escapeHtml(food[0])}${food[7]?` <small>${escapeHtml(food[7])}</small>`:""}${quantity>1?` <em>×${quantity}</em>`:""}</strong><span>${macroText({cal:food[1]*quantity,p:food[2]*quantity,c:food[3]*quantity,fat:food[4]*quantity,s:food[5]*quantity})}</span><div class="day-detail-food-actions"><button data-day-modal-edit="${itemIndex}" data-meal="${meal}" aria-label="Edit ${escapeHtml(food[0])}">✎ Edit</button><button data-day-modal-delete="${itemIndex}" data-meal="${meal}" aria-label="Delete ${escapeHtml(food[0])}">×</button></div></div>`;}).join(""):`<p>Nothing logged</p>`}</div><div class="day-detail-meal-total"><span>Meal total</span><strong>${macroText(total)}</strong></div></section>`;}).join("");
   const dialog=document.querySelector("#dayDetailDialog"); if(!dialog.open)dialog.showModal();
 }
 
@@ -278,20 +279,42 @@ function showAppModal({title,message,confirmText="Okay",cancelText="",tone="info
     dialog.showModal();
   });
 }
+function mealItemRow(values=["","",0,0,0,0,0]) {
+  const row=document.createElement("div"); row.className="meal-item-row";
+  row.innerHTML=`<input class="meal-ing-name" required placeholder="Food item" aria-label="Food item" value="${escapeHtml(values[0])}"><input class="meal-ing-qty" placeholder="Amount used" aria-label="Amount used" value="${escapeHtml(values[1])}">${["cal","p","c","f","s"].map((key,index)=>`<input class="meal-ing-${key}" type="number" min="0" step="0.1" required aria-label="${key}" placeholder="${key}" value="${values[index+2]??""}">`).join("")}<button type="button" class="remove-meal-item" aria-label="Remove item">×</button>`;
+  row.querySelectorAll("input").forEach(input=>input.addEventListener("input",updateQuickMealTotal));
+  row.querySelector(".remove-meal-item").addEventListener("click",()=>{ row.remove(); updateQuickMealTotal(); });
+  document.querySelector("#mealItemEditor").append(row);
+}
+function quickMealRows(){ return [...document.querySelectorAll(".meal-item-row")].map(row=>[row.querySelector(".meal-ing-name").value.trim(),row.querySelector(".meal-ing-qty").value.trim(),...["cal","p","c","f","s"].map(key=>tidy(Number(row.querySelector(`.meal-ing-${key}`).value)||0))]); }
+function updateQuickMealTotal(){ const rows=quickMealRows(); document.querySelector("#quickMealTotal").textContent=macroText(calculatedRecipeTotal(rows)); }
+function setEntryMode(mode="single") {
+  const fullMeal=mode==="meal";
+  document.querySelector("#singleFoodEntry").hidden=fullMeal; document.querySelector("#fullMealEntry").hidden=!fullMeal;
+  document.querySelectorAll("[data-entry-mode]").forEach(button=>{ const active=button.dataset.entryMode===mode; button.classList.toggle("active",active); button.setAttribute("aria-pressed",String(active)); });
+  document.querySelectorAll("#singleFoodEntry input,#singleFoodEntry select").forEach(input=>input.disabled=fullMeal);
+  document.querySelectorAll("#fullMealEntry input").forEach(input=>input.disabled=!fullMeal);
+  document.querySelector("#saveFood").textContent=fullMeal?"Add meal to day":editingFood?"Save changes":"Add to day";
+  document.querySelector("#foodDialogTitle").textContent=fullMeal?"Add full meal":editingFood?"Edit food":"Add food";
+  document.querySelector("#saveFoodToLibrary").hidden=fullMeal||!editingFood;
+  document.querySelector("#foodDialog").classList.toggle("meal-entry-dialog",fullMeal);
+}
 function openFood(day="Monday", meal="Breakfast", food=null, index=null) {
   const form=document.querySelector("#foodForm"); form.reset(); editingFood=food ? {day,meal,index} : null;
   document.querySelector("#quickRecipeSearch").value=""; populateQuickRecipes();
   document.querySelector("#foodDialogTitle").textContent=food ? "Edit food" : "Add food"; document.querySelector("#saveFood").textContent=food ? "Save changes" : "Add to day";
   document.querySelector("#saveFoodToLibrary").hidden=!food;
   document.querySelector("#foodDay").value=day; document.querySelector("#foodMeal").value=meal;
-  if(food){ document.querySelector("#foodName").value=food[0]; document.querySelector("#foodQuantity").value=food[6]||1; [["Calories",food[1]],["Protein",food[2]],["Carbs",food[3]],["Fat",food[4]],["Sugar",food[5]]].forEach(([k,v])=>document.querySelector(`#food${k}`).value=v); }
+  if(food){ document.querySelector("#foodName").value=food[0]; document.querySelector("#foodServing").value=food[7]||""; document.querySelector("#foodQuantity").value=food[6]||1; [["Calories",food[1]],["Protein",food[2]],["Carbs",food[3]],["Fat",food[4]],["Sugar",food[5]]].forEach(([k,v])=>document.querySelector(`#food${k}`).value=v); }
+  document.querySelector("#mealItemEditor").innerHTML=`<div class="meal-item-columns"><span>Food item</span><span>Amount used</span><span>Calories</span><span>Protein</span><span>Carbs</span><span>Fats</span><span>Sugars</span><span></span></div>`; mealItemRow(); mealItemRow(); updateQuickMealTotal(); setEntryMode("single");
+  document.querySelector('[data-entry-mode="meal"]').disabled=Boolean(food);
   updateQuantityHint(); document.querySelector("#foodDialog").showModal(); setTimeout(()=>document.querySelector(food?"#foodName":"#quickRecipeSearch").focus(),50);
 }
 
 function saveEditedFoodToLibrary() {
   const name=document.querySelector("#foodName").value.trim(); if(!name){ showAppModal({title:"Give this food a name",message:"A name is required before the item can be saved to your Food Library.",confirmText:"Got it"}); return; }
   const values=["Calories","Protein","Carbs","Fat","Sugar"].map(key=>tidy(Number(document.querySelector(`#food${key}`).value)||0)), meal=document.querySelector("#foodMeal").value;
-  const rows=[[name,"1 serving",...values]], recipeData={name,type:meal==="Breakfast"?"breakfast":"meal",cal:values[0],p:values[1],c:values[2],fat:values[3],s:values[4],ingredients:[name],rows};
+  const serving=document.querySelector("#foodServing").value.trim()||"1 serving", rows=[[name,serving,...values]], recipeData={name,type:meal==="Breakfast"?"breakfast":"meal",cal:values[0],p:values[1],c:values[2],fat:values[3],s:values[4],ingredients:[name],rows};
   const stored=JSON.parse(localStorage.getItem("daily-fuel-custom-recipes")||"[]"); stored.push(recipeData); localStorage.setItem("daily-fuel-custom-recipes",JSON.stringify(stored)); RECIPES.push({...recipeData,id:`custom-${stored.length-1}`}); populateQuickRecipes();
   showAppModal({title:"Item saved to your library",message:`${name} is now available in the Food Library and the Quick Entry recipe picker.`,confirmText:"Done"});
 }
@@ -316,8 +339,11 @@ document.querySelector("#dayDetailMeals").addEventListener("click",async e=>{
 document.querySelector("#addFoodTop").addEventListener("click",()=> currentPage === "library" ? openRecipeBuilder() : openFood());
 document.querySelector("#saveFoodToLibrary").addEventListener("click",saveEditedFoodToLibrary);
 document.querySelector("#addIngredientRow").addEventListener("click",()=>ingredientRow());
+document.querySelector("#addMealItemRow").addEventListener("click",()=>mealItemRow());
+document.querySelector(".entry-mode-toggle").addEventListener("click",event=>{ const button=event.target.closest("[data-entry-mode]"); if(button&&!button.disabled)setEntryMode(button.dataset.entryMode); });
 document.querySelectorAll(".nav-item[data-page]").forEach(b => b.addEventListener("click",()=>switchPage(b.dataset.page)));
 document.querySelector("#recipeSearch").addEventListener("input",renderLibrary);
+document.querySelector("#recipeSort").addEventListener("change",event=>{ activeRecipeSort=event.target.value; renderLibrary(); });
 document.querySelector("#recipeFilters").addEventListener("click",e=>{ const b=e.target.closest("[data-filter]"); if(!b)return; activeRecipeFilter=b.dataset.filter; document.querySelectorAll(".filter-chip").forEach(x=>x.classList.toggle("active",x===b)); renderLibrary(); });
 document.querySelector("#recipeGrid").addEventListener("click",e=>{
   const add=e.target.closest("[data-recipe]"), details=e.target.closest("[data-details]"), edit=e.target.closest("[data-edit-recipe]");
@@ -328,7 +354,8 @@ document.querySelector("#recipeGrid").addEventListener("click",e=>{
 document.querySelector("#foodForm").addEventListener("submit", e => {
   if (e.submitter?.value === "cancel") return;
   e.preventDefault(); const data=loadWeek(), day=daySelect.value, meal=document.querySelector("#foodMeal").value;
-  const entry=[document.querySelector("#foodName").value, ...["Calories","Protein","Carbs","Fat","Sugar"].map(k=>tidy(Number(document.querySelector(`#food${k}`).value))),Math.max(1,Number(document.querySelector("#foodQuantity").value)||1)];
+  if(!document.querySelector("#fullMealEntry").hidden){ const rows=quickMealRows(); if(!rows.length||rows.some(row=>!row[0])){ showAppModal({title:"Add at least one complete item",message:"Each meal item needs a name and its macros before the meal can be logged.",confirmText:"Got it"}); return; } rows.forEach(row=>data[day][meal].push([row[0],row[2],row[3],row[4],row[5],row[6],1,row[1]])); saveWeek(data); e.target.reset(); document.querySelector("#foodDialog").close(); render(); if(activeDayDetail)openDayDetail(activeDayDetail); return; }
+  const entry=[document.querySelector("#foodName").value, ...["Calories","Protein","Carbs","Fat","Sugar"].map(k=>tidy(Number(document.querySelector(`#food${k}`).value))),Math.max(1,Number(document.querySelector("#foodQuantity").value)||1),document.querySelector("#foodServing").value.trim()];
   if(editingFood){ data[editingFood.day][editingFood.meal].splice(editingFood.index,1); data[day][meal].push(entry); } else data[day][meal].push(entry);
   saveWeek(data); e.target.reset(); document.querySelector("#foodDialog").close(); render(); if(activeDayDetail)openDayDetail(activeDayDetail);
 });
@@ -357,7 +384,7 @@ function populateQuickRecipes(){
 populateQuickRecipes();
 quickRecipeSearch.addEventListener("input",populateQuickRecipes);
 quickRecipeSearch.addEventListener("keydown",event=>{ if(event.key==="Enter"){ event.preventDefault(); const first=quickRecipe.options[1]; if(first){ quickRecipe.value=first.value; quickRecipe.dispatchEvent(new Event("change")); } } });
-quickRecipe.addEventListener("change",()=>{ const recipe=RECIPES.find(r=>String(r.id)===quickRecipe.value); if(!recipe)return; document.querySelector("#foodName").value=recipe.name; [["Calories",recipe.cal],["Protein",recipe.p],["Carbs",recipe.c],["Fat",recipe.fat],["Sugar",recipe.s]].forEach(([k,v])=>document.querySelector(`#food${k}`).value=v); updateQuantityHint(); });
+quickRecipe.addEventListener("change",()=>{ const recipe=RECIPES.find(r=>String(r.id)===quickRecipe.value); if(!recipe)return; document.querySelector("#foodName").value=recipe.name; document.querySelector("#foodServing").value="1 serving"; [["Calories",recipe.cal],["Protein",recipe.p],["Carbs",recipe.c],["Fat",recipe.fat],["Sugar",recipe.s]].forEach(([k,v])=>document.querySelector(`#food${k}`).value=v); updateQuantityHint(); });
 function updateQuantityHint(){ const quantity=Math.max(1,Number(document.querySelector("#foodQuantity").value)||1), values=["Calories","Protein","Carbs","Fat","Sugar"].map(k=>Number(document.querySelector(`#food${k}`).value)||0); document.querySelector("#quantityHint").textContent=quantity===1?"Macros below are for one serving.":`Entry total: ${macroText({cal:values[0]*quantity,p:values[1]*quantity,c:values[2]*quantity,fat:values[3]*quantity,s:values[4]*quantity})}`; }
 document.querySelector("#decreaseQuantity").addEventListener("click",()=>{ const input=document.querySelector("#foodQuantity"); input.value=Math.max(1,Number(input.value)-1); updateQuantityHint(); });
 document.querySelector("#increaseQuantity").addEventListener("click",()=>{ const input=document.querySelector("#foodQuantity"); input.value=Math.max(1,Number(input.value)+1); updateQuantityHint(); });
