@@ -334,6 +334,7 @@ document.querySelector("#dayDetailMeals").addEventListener("click",async e=>{
 });
 document.querySelector("#addFoodTop").addEventListener("click",()=> currentPage === "library" ? openRecipeBuilder() : openFood());
 document.querySelector("#settingsButton").addEventListener("click",openBackupDialog);
+document.querySelector("#mobileSettingsButton").addEventListener("click",openBackupDialog);
 document.querySelector("#closeBackupDialog").addEventListener("click",()=>document.querySelector("#backupDialog").close());
 document.querySelector("#downloadBackup").addEventListener("click",downloadBackup);
 document.querySelector("#chooseBackupFile").addEventListener("click",()=>document.querySelector("#backupFileInput").click());
