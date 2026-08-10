@@ -449,11 +449,15 @@ input,select { font-size:14px; }
   .week-grid { grid-template-columns:repeat(7,calc(100vw - 40px)); gap:12px; padding:0 20px 30px; scroll-snap-type:x mandatory; scroll-padding-left:20px; overscroll-behavior-x:contain; scrollbar-width:none; }
   .week-grid::-webkit-scrollbar { display:none; }
   .day-card { width:100%; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; }
+  .goals-layout { padding:20px; }
+  .goals-card { padding:19px; }
   .weight-card .section-heading { align-items:flex-start; flex-direction:column; }
   .weight-entry { grid-template-columns:1fr; }
   .weight-entry label { width:100%; min-width:0; overflow:hidden; }
   .weight-entry input,.weight-entry .primary-button { width:100%; min-width:0; max-width:100%; }
-  .weight-entry input[type="date"] { display:block; -webkit-appearance:none; appearance:none; }
+  .weight-entry input[type="date"] { display:block; width:-webkit-fill-available; inline-size:-webkit-fill-available; max-inline-size:100%; padding-inline:9px; font-size:13px; -webkit-appearance:none; appearance:none; }
+  .weight-entry input[type="date"]::-webkit-date-and-time-value { min-width:0; margin:0; text-align:left; }
+  .weight-entry input[type="date"]::-webkit-datetime-edit { min-width:0; overflow:hidden; }
   .nutrition-fields { grid-template-columns:1fr 1fr; }
   .library-hero { margin:16px 20px; padding:23px; }
   .library-stat { display:none; }
