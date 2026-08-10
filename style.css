@@ -155,7 +155,9 @@ h1 { font-size: 28px; } h2 { font-size: 24px; }
 .insight-note strong { display:block; font-size:11px; }
 .insight-note p { margin:2px 0 0; color:var(--muted); font-size:10px; }
 .day-card { min-width: 160px; background: white; border: 1px solid var(--line); border-radius: 13px; overflow: hidden; align-self: start; }
-.day-card.today { border-color: #88a67f; box-shadow: 0 0 0 2px #88a67f22; }
+.day-card.today { border:2px solid #64895e; box-shadow:0 8px 24px #45634125,0 0 0 3px #88a67f38; }
+.day-card.today .day-header { background:linear-gradient(135deg,#e3efe0,#f4f8f2); border-bottom-color:#b5cbb0; }
+.day-card.today .day-header-actions::before { content:"TODAY"; padding:3px 6px; border-radius:5px; color:white; background:#52764e; font-size:8px; font-weight:800; letter-spacing:.7px; }
 .day-header { padding: 15px 14px 12px; border-bottom: 1px solid var(--line); }
 .day-title { display: flex; justify-content: space-between; align-items: center; }
 .day-title h3 { margin: 0; font: 700 14px Manrope; }
@@ -360,6 +362,9 @@ body.dark .day-detail-meal-head button { color:#d1e5cd; background:#4a614e; }
 body.dark .day-detail-food-actions button { background:#19231c; }
 body.dark .backup-status { background:#2c3c30; border-color:#58705c; }
 body.dark .meal-total,body.dark .day-header,body.dark .meal { border-color:var(--line); }
+body.dark .day-card.today { border-color:#9bc391; box-shadow:0 8px 28px #0008,0 0 0 3px #9bc39145; }
+body.dark .day-card.today .day-header { background:linear-gradient(135deg,#3c563f,#293c2e); border-bottom-color:#6e8b72; }
+body.dark .day-card.today .day-header-actions::before { color:#142017; background:#b7d8ae; }
 body.dark label { color:#b9c4bc; }
 body.dark .goal-ring::after { background:var(--paper); }
 body.dark .progress { background:#303a33; }
