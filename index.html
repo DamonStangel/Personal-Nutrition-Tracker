@@ -210,6 +210,11 @@
     <div class="backup-dialog-content">
       <div class="dialog-heading"><div><p class="eyebrow">DATA & BACKUP</p><h2>Protect your nutrition data</h2></div><button id="closeBackupDialog" class="close-button" type="button" aria-label="Close data and backup">×</button></div>
       <div class="backup-status"><span>Last downloaded backup</span><strong id="lastBackupDate">Never</strong><p>Your everyday changes still save automatically in this browser. Download a JSON backup whenever you add important recipes or finish logging a week.</p></div>
+      <div class="default-shake-setting">
+        <div><strong>Default daily shake items</strong><p>Automatically add up to two Food Library recipes to every day’s Shake section. Existing matching entries will not be duplicated.</p></div>
+        <div class="default-shake-fields"><label>First item<select id="defaultShakeOne"><option value="">None</option></select></label><label>Second item<select id="defaultShakeTwo"><option value="">None</option></select></label></div>
+        <button id="saveDefaultShakes" class="ghost-button" type="button">Save shake defaults</button>
+      </div>
       <div class="backup-option"><div><strong>Download private backup</strong><p>Includes every saved week, recipe, recipe edit, goal, weight check-in, and preference.</p></div><button id="downloadBackup" class="primary-button" type="button">Download JSON</button></div>
       <div class="backup-option"><div><strong>Restore from backup</strong><p>Use a previous Daily Fuel JSON file to replace the data currently saved in this browser.</p></div><button id="chooseBackupFile" class="ghost-button" type="button">Choose JSON file</button><input id="backupFileInput" type="file" accept="application/json,.json" hidden></div>
       <div class="backup-reminder"><strong>Simple routine</strong><ol><li>Keep using Daily Fuel normally.</li><li>Download a backup after meaningful changes.</li><li>Keep that private JSON in OneDrive, Google Drive, Dropbox, or another safe location.</li></ol></div>

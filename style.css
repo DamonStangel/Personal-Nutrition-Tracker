@@ -220,6 +220,11 @@ dialog::backdrop { background: #111a14a8; backdrop-filter: blur(3px); }
 .backup-option { display:grid; grid-template-columns:1fr auto; align-items:center; gap:18px; padding:17px 4px; border-bottom:1px solid var(--line); }
 .backup-option strong { display:block; margin-bottom:3px; font:700 13px Manrope; }
 .backup-option .primary-button { justify-self:end; }
+.default-shake-setting { margin-top:12px; padding:17px; border:1px solid var(--line); border-radius:11px; background:var(--wash); }
+.default-shake-setting > div:first-child strong { display:block; font:700 14px Manrope; }
+.default-shake-setting p { margin:4px 0 13px; color:var(--muted); font-size:11px; }
+.default-shake-fields { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:11px; }
+.default-shake-setting > button { width:100%; background:var(--paper); }
 .backup-reminder { margin-top:17px; padding:15px 17px; border-radius:9px; background:var(--wash); }
 .backup-reminder strong { font-size:12px; }
 .backup-reminder ol { margin:7px 0 0; padding-left:19px; color:var(--muted); font-size:11px; }
@@ -458,6 +463,7 @@ input,select { font-size:14px; }
   .weight-entry input[type="date"] { display:block; width:-webkit-fill-available; inline-size:-webkit-fill-available; max-inline-size:100%; padding-inline:9px; font-size:13px; -webkit-appearance:none; appearance:none; }
   .weight-entry input[type="date"]::-webkit-date-and-time-value { min-width:0; margin:0; text-align:left; }
   .weight-entry input[type="date"]::-webkit-datetime-edit { min-width:0; overflow:hidden; }
+  .default-shake-fields { grid-template-columns:1fr; }
   .nutrition-fields { grid-template-columns:1fr 1fr; }
   .library-hero { margin:16px 20px; padding:23px; }
   .library-stat { display:none; }

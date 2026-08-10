@@ -41,11 +41,18 @@ function blankWeek() {
 }
 function getWeekKey() { const d = getSunday(); return d.toISOString().slice(0,10); }
 function getSunday() { const d = new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate() - d.getDay() + weekOffset * 7); return d; }
+function defaultShakeNames(){ try{return JSON.parse(localStorage.getItem("daily-fuel-default-shake-items")||"[]").filter(Boolean).slice(0,2);}catch{return [];} }
+function applyDefaultShakes(data){
+  let changed=false;
+  defaultShakeNames().forEach(name=>{ const recipe=RECIPES.find(item=>item.name.toLowerCase()===String(name).toLowerCase()); if(!recipe)return; Object.values(data).forEach(meals=>{ meals.Shake ||= []; if(meals.Shake.some(food=>String(food[0]).toLowerCase()===recipe.name.toLowerCase()))return; meals.Shake.push([recipe.name,recipe.cal,recipe.p,recipe.c,recipe.fat,recipe.s,1,"1 serving"]); changed=true; }); });
+  return changed;
+}
 function loadWeek() {
   const saved = localStorage.getItem(`daily-fuel-${getWeekKey()}`);
-  if (saved) return JSON.parse(saved);
+  if (saved){ const data=JSON.parse(saved); if(applyDefaultShakes(data))saveWeek(data); return data; }
   const data = blankWeek();
   if (weekOffset === 0) Object.entries(sample).forEach(([day, meals]) => Object.assign(data[day], meals));
+  if(applyDefaultShakes(data))saveWeek(data);
   return data;
 }
 function saveWeek(data) { localStorage.setItem(`daily-fuel-${getWeekKey()}`, JSON.stringify(data)); }
@@ -53,9 +60,10 @@ function sumFoods(foods) { return foods.reduce((a,f) => { const quantity=f[6]||1
 function dayTotal(day) { return MEALS.reduce((total, meal) => { const m = sumFoods(day[meal]); Object.keys(total).forEach(k => total[k] += m[k]); return total; }, {cal:0,p:0,c:0,fat:0,s:0}); }
 function weekKeyForDate(date) { const d=new Date(date); d.setHours(12,0,0,0); d.setDate(d.getDate()-d.getDay()); return d.toISOString().slice(0,10); }
 function dataForDate(date) { const key=weekKeyForDate(date), saved=localStorage.getItem(`daily-fuel-${key}`); if(saved) return JSON.parse(saved); if(key===weekKeyForDate(new Date())){ const data=blankWeek(); Object.entries(sample).forEach(([day,meals])=>Object.assign(data[day],meals)); return data; } return blankWeek(); }
+function isStreakDay(day){ return ["Breakfast","Lunch","Dinner"].reduce((count,meal)=>count+(day?.[meal]?.length||0),0)>=2; }
 function calculateStreak() {
   let streak=0, cursor=new Date(); cursor.setHours(12,0,0,0);
-  for(let i=0;i<366;i++){ const data=dataForDate(cursor), dayName=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][cursor.getDay()]; if(dayTotal(data[dayName]).cal<=0) break; streak++; cursor.setDate(cursor.getDate()-1); }
+  for(let i=0;i<366;i++){ const data=dataForDate(cursor), dayName=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][cursor.getDay()]; if(!isStreakDay(data[dayName]))break; streak++; cursor.setDate(cursor.getDate()-1); }
   return streak;
 }
 function tidy(n) { return Number.isInteger(n) ? n : Math.round(n * 10) / 10; }
@@ -262,7 +270,8 @@ function showAppModal({title,message,confirmText="Okay",cancelText="",tone="info
 }
 function backupStorageSnapshot(){ const storage={}; for(let index=0;index<localStorage.length;index++){ const key=localStorage.key(index); if(key?.startsWith("daily-fuel-")) storage[key]=localStorage.getItem(key); } return storage; }
 function updateBackupStatus(){ const saved=localStorage.getItem("daily-fuel-last-backup"); document.querySelector("#lastBackupDate").textContent=saved?formatDate(new Date(saved),{month:"long",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"}):"Never"; }
-function openBackupDialog(){ updateBackupStatus(); document.querySelector("#backupDialog").showModal(); }
+function populateDefaultShakeSettings(){ const selected=defaultShakeNames(), options=RECIPES.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(recipe=>`<option value="${escapeHtml(recipe.name)}">${escapeHtml(recipe.name)}</option>`).join(""); ["defaultShakeOne","defaultShakeTwo"].forEach((id,index)=>{ const select=document.querySelector(`#${id}`); select.innerHTML=`<option value="">None</option>${options}`; select.value=selected[index]||""; }); }
+function openBackupDialog(){ updateBackupStatus(); populateDefaultShakeSettings(); document.querySelector("#backupDialog").showModal(); }
 function downloadBackup(){
   const exportedAt=new Date().toISOString(); localStorage.setItem("daily-fuel-last-backup",exportedAt);
   const backup={format:"daily-fuel-backup",version:1,exportedAt,libraryRecipes:RECIPES.map(({id,...recipe})=>recipe),storage:backupStorageSnapshot()};
@@ -341,6 +350,7 @@ document.querySelector("#settingsButton").addEventListener("click",openBackupDia
 document.querySelector("#mobileSettingsButton").addEventListener("click",openBackupDialog);
 document.querySelector("#closeBackupDialog").addEventListener("click",()=>document.querySelector("#backupDialog").close());
 document.querySelector("#downloadBackup").addEventListener("click",downloadBackup);
+document.querySelector("#saveDefaultShakes").addEventListener("click",()=>{ const names=[document.querySelector("#defaultShakeOne").value,document.querySelector("#defaultShakeTwo").value].filter((name,index,array)=>name&&array.indexOf(name)===index); localStorage.setItem("daily-fuel-default-shake-items",JSON.stringify(names)); const data=loadWeek(); applyDefaultShakes(data); saveWeek(data); render(); document.querySelector("#backupDialog").close(); showAppModal({title:"Shake defaults saved",message:names.length?`${names.length} default ${names.length===1?"item":"items"} will appear in every day’s Shake section without duplicates.`:"New weeks will no longer receive automatic Shake items.",confirmText:"Done"}); });
 document.querySelector("#chooseBackupFile").addEventListener("click",()=>document.querySelector("#backupFileInput").click());
 document.querySelector("#backupFileInput").addEventListener("change",event=>{ const file=event.target.files[0]; event.target.value=""; if(file)restoreBackup(file); });
 document.querySelector("#editDietStart").addEventListener("click",openDietStartDialog);
