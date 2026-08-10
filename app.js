@@ -64,17 +64,17 @@ function formatDate(d, opts) { return new Intl.DateTimeFormat("en-US", opts).for
 function localDateValue(date=new Date()){ const local=new Date(date.getTime()-date.getTimezoneOffset()*60000); return local.toISOString().slice(0,10); }
 
 function render() {
-  const data = loadWeek(), sunday = getSunday(), grid = document.querySelector("#weekGrid");
+  const data = loadWeek(), sunday = getSunday(), grid = document.querySelector("#weekGrid"), dayTabs=document.querySelector("#mobileDayTabs");
   const saturday = new Date(sunday); saturday.setDate(sunday.getDate()+6);
   document.querySelector("#weekLabel").textContent = `${formatDate(sunday,{month:"short",day:"numeric"})} – ${formatDate(saturday,{month:"short",day:"numeric",year:"numeric"})}`;
-  grid.innerHTML = "";
+  grid.innerHTML = ""; dayTabs.innerHTML="";
   let week = {cal:0,p:0,c:0,fat:0,s:0}, averageTotals={cal:0,p:0,c:0,fat:0,s:0}, averageDays=0;
   Object.entries(data).forEach(([day, meals], index) => {
     const date = new Date(sunday); date.setDate(sunday.getDate()+index);
     const total = dayTotal(meals); Object.keys(week).forEach(k => week[k] += total[k]);
     const populatedMeals=MEALS.filter(meal=>(meals[meal]||[]).length>0).length; if(populatedMeals>1){ averageDays++; Object.keys(averageTotals).forEach(k=>averageTotals[k]+=total[k]); }
     const isToday = date.toDateString() === new Date().toDateString();
-    const card = document.createElement("article"); card.className = `day-card${isToday ? " today" : ""}`;
+    const card = document.createElement("article"); card.className = `day-card${isToday ? " today" : ""}`; card.dataset.dayCard=day;
     card.innerHTML = `<header class="day-header"><div class="day-title"><button class="day-title-button" data-open-day="${day}" aria-label="Open ${day} breakdown">${day}<span>↗</span></button><div class="day-header-actions"><span>${formatDate(date,{month:"short",day:"numeric"})}</span><button class="clear-day" data-clear-day="${day}" aria-label="Clear ${day}" title="Clear ${day}">⌫</button></div></div><div class="day-total">${tidy(total.cal).toLocaleString()} cal<small>${tidy(total.p)}p · ${tidy(total.c)}c · ${tidy(total.fat)}f · ${tidy(total.s)}s</small></div><div class="progress"><span style="width:${Math.min(total.cal/GOALS.calories*100,100)}%"></span></div></header>`;
     MEALS.forEach(meal => {
       const foods = meals[meal] || [], mt = sumFoods(foods), section = document.createElement("section"); section.className = "meal"; section.dataset.meal=meal.toLowerCase();
@@ -82,6 +82,7 @@ function render() {
       card.append(section);
     });
     grid.append(card);
+    const tab=document.createElement("button"); tab.type="button"; tab.dataset.dayTab=day; tab.className=isToday?"active":""; tab.setAttribute("aria-label",`Show ${day}`); tab.innerHTML=`<strong>${day.slice(0,3)}</strong><small>${date.getDate()}</small>`; dayTabs.append(tab);
   });
   const target = GOALS.calories*7, pct = Math.round(week.cal/target*100);
   document.querySelector("#weeklyPercent").textContent = `${pct}%`; document.querySelector("#goalRing").style.background = `conic-gradient(var(--green) ${Math.min(pct,100)}%, #e8ede8 0)`;
@@ -91,6 +92,9 @@ function render() {
   document.querySelector("#calorieGoalLabel").textContent=`Goal ${tidy(GOALS.calories).toLocaleString()} cal`; document.querySelector("#proteinGoalLabel").textContent=`Goal ${tidy(GOALS.protein)}g`; document.querySelector("#carbsGoalLabel").textContent=`Goal ${tidy(GOALS.carbs)}g`; document.querySelector("#fatGoalLabel").textContent=`Goal ${tidy(GOALS.fat)}g`;
   const streak=calculateStreak(); document.querySelector("#streakCount").textContent=`${streak} day streak`; document.querySelector("#streakMessage").textContent=streak ? "Keep it rolling" : "Log today to begin";
 }
+
+document.querySelector("#mobileDayTabs").addEventListener("click",e=>{ const tab=e.target.closest("[data-day-tab]"); if(!tab)return; document.querySelector(`[data-day-card="${tab.dataset.dayTab}"]`)?.scrollIntoView({behavior:"smooth",block:"nearest",inline:"start"}); document.querySelectorAll("[data-day-tab]").forEach(button=>button.classList.toggle("active",button===tab)); });
+document.querySelector("#weekGrid").addEventListener("scroll",e=>{ if(innerWidth>700)return; const cards=[...e.currentTarget.querySelectorAll("[data-day-card]")]; if(!cards.length)return; const closest=cards.reduce((best,card)=>Math.abs(card.offsetLeft-e.currentTarget.scrollLeft)<Math.abs(best.offsetLeft-e.currentTarget.scrollLeft)?card:best); document.querySelectorAll("[data-day-tab]").forEach(tab=>tab.classList.toggle("active",tab.dataset.dayTab===closest.dataset.dayCard)); },{passive:true});
 
 function renderLibrary() {
   const term = document.querySelector("#recipeSearch").value.trim().toLowerCase();

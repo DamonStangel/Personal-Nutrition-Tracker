@@ -54,6 +54,7 @@ h1 { font-size: 28px; } h2 { font-size: 24px; }
 .macro-dot.carbs { background: var(--carbs); } .macro-dot.fats { background: var(--fats); }
 .ghost-button { padding: 9px 13px; font-weight: 600; }
 .week-grid { padding: 0 38px 38px; display: grid; grid-template-columns: repeat(7, minmax(160px, 1fr)); gap: 10px; overflow-x: auto; }
+.mobile-day-tabs { display:none; }
 [hidden] { display: none !important; }
 .library-hero { margin: 25px 38px 18px; min-height: 144px; padding: 28px 31px; border-radius: 15px; color: #edf5ec; background: linear-gradient(110deg,#294530,#4f704f); display: flex; align-items: center; justify-content: space-between; overflow: hidden; position: relative; }
 .library-hero::after { content:""; position:absolute; width:240px; height:240px; border:45px solid #ffffff0b; border-radius:50%; right:80px; top:-95px; }
@@ -429,7 +430,7 @@ input,select { font-size:14px; }
   .sidebar-card,.sidebar-footer { display:none; }
   .mobile-settings-button { display:block; width:40px; height:36px; border:1px solid #354139; border-radius:8px; color:#c7d0c9; background:#1b251e; font-weight:800; }
   .sidebar nav { position:fixed; z-index:30; left:0; right:0; bottom:0; display:grid; grid-template-columns:repeat(4,1fr); gap:3px; padding:7px 8px calc(7px + env(safe-area-inset-bottom)); border-top:1px solid #354139; background:#101713; box-shadow:0 -8px 24px #08100b35; }
-  .sidebar .nav-item { display:flex; min-width:0; padding:7px 3px 6px; border-radius:8px; flex-direction:column; align-items:center; gap:2px; color:#9ba69e; font-size:10px; line-height:1.15; text-align:center; white-space:nowrap; }
+  .sidebar .nav-item { display:flex; min-width:0; padding:7px 2px 6px; border-radius:8px; flex-direction:column; align-items:center; gap:2px; color:#9ba69e; font-size:9px; line-height:1; text-align:center; white-space:nowrap; }
   .sidebar .nav-item span { width:auto; font-size:19px; line-height:1; }
   .sidebar .nav-item.active { color:white; background:#2b3a2f; }
   main { margin-left:0; }
@@ -439,7 +440,18 @@ input,select { font-size:14px; }
   .goal-strip { margin:16px 20px; grid-template-columns:1fr 1fr; }
   .goal-summary { grid-column:1/-1; }
   .macro-summary { padding-left:0; border:0; }
-  .week-grid { padding:0 20px 30px; }
+  .mobile-day-tabs { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:0 20px 10px; padding:5px; border:1px solid var(--line); border-radius:12px; background:var(--paper); }
+  .mobile-day-tabs button { min-width:0; padding:7px 1px; border:0; border-radius:8px; color:var(--muted); background:transparent; line-height:1.1; }
+  .mobile-day-tabs strong,.mobile-day-tabs small { display:block; }
+  .mobile-day-tabs strong { font-size:10px; }
+  .mobile-day-tabs small { margin-top:3px; font-size:9px; }
+  .mobile-day-tabs button.active { color:white; background:var(--green-dark); }
+  .week-grid { grid-template-columns:repeat(7,calc(100vw - 40px)); gap:12px; padding:0 20px 30px; scroll-snap-type:x mandatory; scroll-padding-left:20px; overscroll-behavior-x:contain; scrollbar-width:none; }
+  .week-grid::-webkit-scrollbar { display:none; }
+  .day-card { width:100%; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; }
+  .weight-card .section-heading { align-items:flex-start; flex-direction:column; }
+  .weight-entry { grid-template-columns:1fr; }
+  .weight-entry label,.weight-entry input,.weight-entry .primary-button { width:100%; min-width:0; }
   .nutrition-fields { grid-template-columns:1fr 1fr; }
   .library-hero { margin:16px 20px; padding:23px; }
   .library-stat { display:none; }
