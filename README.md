@@ -1,6 +1,6 @@
 # Daily Fuel - Personal Nutrition Tracker
 
-A lightweight weekly calorie and macro tracker built with plain HTML, CSS, and JavaScript.
+A weekly calorie and macro tracker built with plain HTML, CSS, and JavaScript.
 
 The repository contains only a small generic starter library and example day. Personal recipes and tracking history belong in private backup files, not in source control.
 
